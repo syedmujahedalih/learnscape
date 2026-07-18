@@ -1,29 +1,37 @@
 import { NextResponse } from "next/server";
 import { blueprintSchema, type LearnscapeBlueprint } from "@/lib/blueprint/schema";
-import { circuitBlueprint, pendulumBlueprint, statisticsBlueprint, titrationBlueprint } from "@/lib/blueprint/fixtures";
+import { pendulumBlueprint } from "@/lib/blueprint/fixtures";
 import { deterministicSourceAnalysis, sourceAnalysisJsonSchema, sourceAnalysisSchema, type AnalysisMeta, type SourceAnalysis } from "@/lib/blueprint/source-analysis";
 
-const system = `You are Learnscape's pedagogical source mapper. Convert a STEM excerpt into a concise causal learning blueprint. Identify the relationship a student should predict, the most plausible misconception worth testing, and why interaction adds value. Choose a supported template only when the source clearly matches it. Do not invent equations or claims beyond the supplied source.`;
+const system = `You are Learnscape's pedagogical source mapper for a focused pendulum-motion pilot. Convert a supplied excerpt into a concise causal learning blueprint. Identify the relationship a student should predict, the most plausible misconception worth testing, and why interaction adds value. Choose pendulum_world only when the source clearly concerns pendulum motion; choose unsupported for every other topic. Do not invent claims beyond the supplied source.`;
+
+function unsupportedBlueprint() {
+  return {
+    ...pendulumBlueprint,
+    id: "unsupported-source",
+    title: "This lesson is not available yet",
+    domain: "other" as const,
+    concepts: [{ id: "source-concept", name: "Source concept", explanation: "The source was read, but this pilot only includes a validated pendulum lesson.", importance: "primary" as const }],
+    variables: [], equations: [], relationships: [],
+    learningObjectives: ["Identify the testable relationship in the supplied concept."],
+    commonMisconceptions: [],
+    recommendedExperience: { templateId: "unsupported" as const, representation: "unsupported" as const, rationale: "Learnscape currently ships one deeply validated pendulum lesson rather than several inconsistent previews." },
+    assumptions: ["Only the Pendulum Observatory has been validated for this prototype."],
+    limitations: ["Additional subjects require their own domain model, experiment design, and validation."],
+    validationStatus: "unsupported" as const,
+  };
+}
 
 function fallback(text: string) {
   const templateId = deterministicSourceAnalysis(text).templateId;
   if (templateId === "pendulum_world") return pendulumBlueprint;
-  if (templateId === "acid_base_titration") return titrationBlueprint;
-  if (templateId === "ohms_law_circuit") return circuitBlueprint;
-  if (templateId === "statistics_explorer") return statisticsBlueprint;
-  return {
-    ...statisticsBlueprint, id: "unsupported-source", title: "New source blueprint", domain: "other" as const, validationStatus: "unsupported" as const,
-    recommendedExperience: { templateId: "unsupported" as const, representation: "unsupported" as const, rationale: "Learnscape understood the source, but a validated interactive template for this concept is not available yet." },
-  };
+  return unsupportedBlueprint();
 }
 
 function cleanJson(text: string) { return JSON.parse(text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "")); }
 
 function templateFor(templateId: SourceAnalysis["templateId"], text: string) {
   if (templateId === "pendulum_world") return pendulumBlueprint;
-  if (templateId === "acid_base_titration") return titrationBlueprint;
-  if (templateId === "ohms_law_circuit") return circuitBlueprint;
-  if (templateId === "statistics_explorer") return statisticsBlueprint;
   return fallback(text);
 }
 

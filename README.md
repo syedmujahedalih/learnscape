@@ -15,14 +15,13 @@ The student path stays deliberately small: Predict, Test, Explain. Evidence, fre
 
 The flagship mission also maintains a probabilistic picture of the learner's current misconception. It combines their prediction, confidence, reflection, explanation, and transfer response, then selects the experiment with the highest expected learning value. The recommendation is locked while the student runs it so the evidence trail stays coherent. An optional instructor lens makes the inference and recommendation inspectable.
 
-## What is included
+## The focused prototype
 
-- Pendulum Observatory — a polished Three.js world with live kinetic/potential energy, a validated RK4 solver, and an actual trained 818-parameter transition model forecasting motion in the browser.
-- Acid–base titration — a deterministic, simplified strong-acid/strong-base model with synchronized lab, molecular, curve, and equation views.
-- Ohm’s Law circuit lab — a closed DC circuit model with adjustable voltage, resistance, and switch state.
-- Statistics preview — an experimental mean-versus-median and outlier interaction.
-- Source workflow — visible source-to-world transformation, local Llama analysis, OpenAI Responses API structured output, deterministic replay, source traceability, and intentional unsupported states.
+- Pendulum Observatory — the single visible flagship: a polished Three.js lesson with live kinetic/potential energy, a validated RK4 reference, and a trained 818-parameter transition forecast running in the browser.
+- Source workflow — a pendulum course page becomes a testable relationship, belief worth testing, and validated lesson. It supports local Llama analysis, OpenAI Responses API structured output, deterministic replay, and an honest unsupported state for other subjects.
 - Adaptive learning missions — prediction locks, confidence capture, misconception inference, information-guided experiment selection, transfer checks, insight scoring, and replayable concept passports.
+
+Earlier chemistry, circuits, and statistics engines remain in the repository as exploratory work, but they are intentionally absent from the submission experience. The prototype demonstrates one complete learning loop instead of presenting several inconsistent subject previews.
 
 ## Run it
 

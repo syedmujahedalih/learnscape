@@ -17,3 +17,7 @@
 - Added a judge-readable transformation reveal with source grounding, cause/effect mapping, likely misconception, selected world, and honest live-versus-replay provider status.
 - Upgraded hosted inference to the OpenAI Responses API with a strict structured-output contract while preserving the llama.cpp Chat Completions path.
 - Expanded deterministic source mapping to support the flagship pendulum and keep the deployed no-credit demo reliable.
+- Removed the visible multi-world library and blueprint-review detour after pressure-testing the submission story.
+- Reduced the product to four coherent surfaces: home, course page, testable-idea reveal, and the Pendulum lesson.
+- Reframed technical terms into student-facing language such as “what changes what,” “belief worth testing,” and “run one test.”
+- Kept non-pendulum topics intentionally unsupported until each has its own validated domain and learning design.

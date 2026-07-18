@@ -10,8 +10,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
   const host = requestHeaders.get("host") ?? "learnscape.local";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? "https";
-  const title = "Learnscape — Predict what happens. Discover why.";
-  const description = "Predictive STEM learning worlds where students test intuition, compare with evidence, and transfer what they learn.";
+  const title = "Learnscape — Turn a page into a lesson.";
+  const description = "A focused STEM learning platform where students predict, run one useful experiment, explain the evidence, and transfer the idea.";
   return { title, description, icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" }, openGraph: { title, description, images: [`${protocol}://${host}/og-pendulum.png`] }, twitter: { card: "summary_large_image", title, description, images: [`${protocol}://${host}/og-pendulum.png`] } };
 }
 
