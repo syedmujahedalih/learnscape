@@ -6,7 +6,7 @@ Learnscape turns STEM concepts into interactive systems that reveal how a studen
 
 ## Before recording
 
-- Use a 16:9 browser window at 1440 × 900 or larger and hide bookmarks and notifications.
+- Use a 16:9 browser window at 1440 × 900 or larger and hide bookmarks and notifications. The flagship is designed to remain in one frame at this size.
 - Open the deployed home page, reload once, and click **Enter the observatory** before the take to warm the 3D bundle.
 - Reset the mission, then return to the home page. Keep a second tab on this script.
 - Record cursor clicks as the primary action; do not scroll while speaking unless the script calls for it.

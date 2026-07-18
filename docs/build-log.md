@@ -10,3 +10,6 @@
 - Added automated checks for learner-state normalization, misconception detection, experiment choice, and belief revision.
 - Simplified the student experience to three visible steps—Predict, Test, Explain—with automatic experiment setup and one primary action per state.
 - Moved free controls, forecast mechanics, and instructor evidence behind optional disclosures so the causal task remains the visual priority.
+- Rebuilt the flagship desktop experience as one judge-readable frame: student reasoning on the left and the live world on the right.
+- Replaced generic system typography with a Manrope product face and DM Serif Display editorial face, then retuned scale, rhythm, controls, contrast, and responsive behavior around that pairing.
+- Replaced the confidence slider with three clear confidence choices and gave the experiment a focused, dark-glass control surface inside the world.
