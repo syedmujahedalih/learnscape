@@ -8,12 +8,16 @@ async function render() {
   return worker.fetch(new Request("http://localhost/", { headers: { accept: "text/html" } }), { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } }, { waitUntil() {}, passThroughOnException() {} });
 }
 
-test("server renders Learnscape rather than the starter preview", async () => {
+test("server renders the evidence-driven Learnscape experience", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /<title>Learnscape — Step inside what you&#x27;re learning<\/title>/i);
-  assert.match(html, /Step inside/);
+  assert.match(html, /Test your model/);
+  assert.match(html, /Source-grounded/);
+  assert.match(html, /Prediction-locked/);
+  assert.match(html, /Transfer-checked/);
+  assert.match(html, /90-second demo/);
   assert.match(html, /Acid–Base Titration/);
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/i);
 });

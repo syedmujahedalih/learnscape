@@ -1,6 +1,17 @@
 # Learnscape
 
-**Step inside what you’re learning.** Learnscape turns a textbook source into a structured learning blueprint, then connects a learner’s prediction, manipulation, observation, equation, explanation, and transfer challenge.
+**Don’t just read it. Test your model.** Learnscape turns a textbook source into a prediction-locked learning world. Learners commit to a mental model, change one variable, compare their prediction with evidence, explain the causal relationship, and pass a transfer check.
+
+## Product wedge
+
+Learnscape is not a generic course library or a points layer on top of video. Its differentiator is a source-grounded reasoning loop:
+
+1. **Predict** — commit before the controls unlock.
+2. **Experiment** — change the simulated world and capture evidence.
+3. **Compare** — decide whether the evidence supports or revises the original model.
+4. **Transfer** — apply the causal relationship in a changed situation.
+
+Gamification rewards evidence and conceptual progress: an insight score, lab-notebook trail, concept-passport stamp, and discoveries tied to meaningful experimental states. The 90-second guided mission is the primary demo path.
 
 ## What is included
 
@@ -8,6 +19,7 @@
 - Ohm’s Law circuit lab — a closed DC circuit model with adjustable voltage, resistance, and switch state.
 - Statistics preview — an experimental mean-versus-median and outlier interaction.
 - Source workflow — local Llama analysis, deterministic fixtures, source traceability, and intentional unsupported states.
+- Learning missions — prediction locks, confidence capture, correctness-gated transfer checks, insight scoring, and replayable concept passports.
 
 ## Run it
 
