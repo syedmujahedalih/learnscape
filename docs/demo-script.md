@@ -1,5 +1,19 @@
 # Learnscape demo video and pitch kit
 
+## Submission-critical checklist
+
+- Deadline: **Tuesday, July 21 at 5:00 PM PT**.
+- Create the Devpost project draft now; the connected account is registered, but no project draft exists yet.
+- Video: **under 3:00**, public YouTube, with spoken audio explaining the product, Codex, and GPT-5.6.
+- Run one explicit, meaningful build session with **GPT-5.6 Terra in Codex** and record exactly what changed. Recommended task: launch-readiness audit plus one implemented fix to the source-to-world flow.
+- In Codex, run `/feedback` on the task containing most of the core build and save the session ID required by the submission form.
+- Provide a code-repository URL. If private, share it with `testing@devpost.com` and `build-week-event@openai.com`; if public, add an appropriate license.
+- Verify the YouTube link in an incognito/private window before submitting.
+
+Recommended GPT-5.6 Terra prompt:
+
+> Audit Learnscape as an OpenAI Build Week Education-track submission against technological implementation, design, potential impact, and quality of idea. Run the product and tests, identify the single highest-impact weakness visible in a three-minute judged demo, implement a scoped fix, verify it, and document the decision in the README.
+
 ## The one-line pitch
 
 Learnscape turns STEM concepts into interactive systems that reveal how a student reasons, choose the experiment they need next, and verify that understanding transfers.
@@ -12,19 +26,35 @@ Learnscape turns STEM concepts into interactive systems that reveal how a studen
 - Record cursor clicks as the primary action; do not scroll while speaking unless the script calls for it.
 - Use the deterministic sample path. Local Llama and GPT are valuable architecture proof, but network latency should not be in the 90-second product video.
 
-## 90-second submission video
+## Official submission video — target 2:40
+
+Record the product full-screen at 1440 × 900. Use deliberate cursor movement, no background music under important narration, and leave roughly 15 seconds of safety under the three-minute limit.
 
 | Time | Screen action | Narration |
 |---|---|---|
-| 0:00–0:07 | Home hero: textbook excerpt, causal map, and pendulum world are all visible. | “Static pages tell students what happens. Generic chat can explain it. Neither reliably reveals what a student thinks causes it.” |
-| 0:07–0:15 | Click **Watch the transformation**; the source-to-world reveal appears. | “Learnscape maps the source into a causal question, a likely misconception, and a validated world where that idea can be tested.” |
-| 0:15–0:25 | Point to source, cause → effect, misconception, then click **Enter the learning world**. | “This is not arbitrary 3D generation. It is a learning blueprint grounded in the supplied material.” |
-| 0:25–0:37 | Select **The swing becomes faster**, set confidence to 80%, and choose **Test my prediction**. | “A learner predicts that a heavier pendulum swings faster. That prediction becomes useful evidence.” |
-| 0:37–0:48 | Point to the automatically prepared controlled setup. | “Learnscape estimates the likely misconception and chooses the controlled experiment with the highest learning value.” |
-| 0:48–1:00 | Release the pendulum and point to its motion and energy exchange. | “A tiny learned forecast is checked against validated physics: mass changes energy, but not the ideal period.” |
-| 1:00–1:10 | Choose **I changed my mind** after the comparison. | “The learner must reconcile the evidence with the original claim.” |
-| 1:10–1:23 | Enter the causal explanation and choose **lengthen the cord**. | “Then they explain the rule and transfer it to an unfamiliar problem. Progress comes from understanding, not clicking through.” |
-| 1:23–1:30 | Stamp the passport. | “Learnscape turns what students read into a system they can reason about—and their interactions into evidence an instructor can act on.” |
+| 0:00–0:12 | Hold on the redesigned landing page. Slowly point across textbook excerpt → causal map → pendulum. | “Textbooks tell students what happens. AI tutors can explain it. But neither reliably reveals what a student thinks causes it. Learnscape turns a concept into a system a learner can predict, test, and understand.” |
+| 0:12–0:32 | Click **Watch the transformation**. Point to the source, cause → effect, misconception, and chosen world. | “From one course excerpt, Learnscape builds a grounded learning blueprint: the causal question, the variable relationship, a misconception worth testing, and a validated interactive world. It is not arbitrary AI-generated 3D content.” |
+| 0:32–0:46 | Click **Enter the learning world**. Select **The swing becomes faster**, choose **Pretty sure**, then **Test my prediction**. | “Here the student predicts that a heavier pendulum swings faster. They commit before the controls unlock, so even a wrong answer becomes useful evidence about how they reason.” |
+| 0:46–1:04 | Point to the automatically prepared mass comparison. Briefly open **Learning evidence** if it fits cleanly. | “Learnscape maintains an inspectable probability distribution over concept-specific misconceptions, then selects the controlled experiment with the highest expected learning value. For this learner, it holds length and angle constant and changes mass.” |
+| 1:04–1:25 | Release the pendulum. Point to both trajectories, the live energy display, and the result. | “The amber path is the validated numerical physics reference. The blue path is an 818-parameter learned next-state forecast running in the browser. The forecast is checked against the reference rather than presented as ground truth.” |
+| 1:25–1:43 | Continue, choose **I changed my mind**, then show the explanation and transfer question. | “The student must reconcile the evidence with the original claim, explain the causal rule, and transfer it to a changed situation. Mastery is earned through transfer—not by clicking through content.” |
+| 1:43–1:57 | Enter the correct explanation, select **lengthen the cord**, and stamp the concept passport. | “Their prediction, confidence, experiment, revision, explanation, and transfer answer become an evidence trail an instructor can inspect.” |
+| 1:57–2:20 | Switch to Codex. Show this task, the edited files or build log, and a passing test result. | “I built Learnscape with Codex as an engineering collaborator: pressure-testing the product wedge, simplifying the student flow, implementing the Three.js world, learner-state inference, experiment selection, structured source mapping, and automated scientific checks.” |
+| 2:20–2:32 | Show the specific GPT-5.6 Terra task and its resulting diff or documented decision. | “I used GPT-5.6 Terra in Codex specifically to **[replace with the exact citable task and shipped result]**. I kept the judged path deterministic, so the demo does not depend on paid API credits or network latency.” |
+| 2:32–2:45 | Return to the completion screen or landing thesis. | “Learnscape is a domain model, interactive simulation, learner model, and AI tutor working together—helping a student’s internal model move closer to reality. The 3D world is the presentation layer. Causal understanding is the product.” |
+
+Do not record until the bracketed GPT-5.6 line names a task you actually completed with that model.
+
+### Recording pickups
+
+Record these as separate clips so a failed interaction does not ruin the whole take:
+
+1. Landing and transformation reveal.
+2. Prediction and adaptive experiment setup.
+3. Pendulum release and evidence comparison.
+4. Explanation, transfer, and passport.
+5. Codex/GPT-5.6 proof.
+6. Closing product thesis.
 
 Recommended final title card: **Learnscape — Predict. Experiment. Understand why.**
 
