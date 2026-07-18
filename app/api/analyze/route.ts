@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { blueprintSchema, type LearnscapeBlueprint } from "@/lib/blueprint/schema";
-import { circuitBlueprint, statisticsBlueprint, titrationBlueprint } from "@/lib/blueprint/fixtures";
+import { circuitBlueprint, pendulumBlueprint, statisticsBlueprint, titrationBlueprint } from "@/lib/blueprint/fixtures";
+import { deterministicSourceAnalysis, sourceAnalysisJsonSchema, sourceAnalysisSchema, type AnalysisMeta, type SourceAnalysis } from "@/lib/blueprint/source-analysis";
 
-const system = `You classify a textbook excerpt for Learnscape. Return JSON only with templateId, title, and summary. templateId must be exactly acid_base_titration, ohms_law_circuit, statistics_explorer, or unsupported. Choose a validated template only when the excerpt clearly describes it. Statistics can be experimental.`;
+const system = `You are Learnscape's pedagogical source mapper. Convert a STEM excerpt into a concise causal learning blueprint. Identify the relationship a student should predict, the most plausible misconception worth testing, and why interaction adds value. Choose a supported template only when the source clearly matches it. Do not invent equations or claims beyond the supplied source.`;
 
 function fallback(text: string) {
-  const value = text.toLowerCase();
-  if (/titr|ph|acid|base|neutraliz/.test(value)) return titrationBlueprint;
-  if (/ohm|voltage|resistan|circuit|current/.test(value)) return circuitBlueprint;
-  if (/mean|median|outlier|coin|probabil|distribution|standard deviation/.test(value)) return statisticsBlueprint;
+  const templateId = deterministicSourceAnalysis(text).templateId;
+  if (templateId === "pendulum_world") return pendulumBlueprint;
+  if (templateId === "acid_base_titration") return titrationBlueprint;
+  if (templateId === "ohms_law_circuit") return circuitBlueprint;
+  if (templateId === "statistics_explorer") return statisticsBlueprint;
   return {
     ...statisticsBlueprint, id: "unsupported-source", title: "New source blueprint", domain: "other" as const, validationStatus: "unsupported" as const,
     recommendedExperience: { templateId: "unsupported" as const, representation: "unsupported" as const, rationale: "Learnscape understood the source, but a validated interactive template for this concept is not available yet." },
@@ -17,25 +19,74 @@ function fallback(text: string) {
 
 function cleanJson(text: string) { return JSON.parse(text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "")); }
 
+function templateFor(templateId: SourceAnalysis["templateId"], text: string) {
+  if (templateId === "pendulum_world") return pendulumBlueprint;
+  if (templateId === "acid_base_titration") return titrationBlueprint;
+  if (templateId === "ohms_law_circuit") return circuitBlueprint;
+  if (templateId === "statistics_explorer") return statisticsBlueprint;
+  return fallback(text);
+}
+
+function outputText(body: unknown) {
+  if (!body || typeof body !== "object") return "";
+  const response = body as { output_text?: unknown; output?: Array<{ content?: Array<{ type?: string; text?: string }> }> };
+  if (typeof response.output_text === "string") return response.output_text;
+  return response.output?.flatMap(item => item.content ?? []).find(item => item.type === "output_text")?.text ?? "";
+}
+
+async function analyzeWithGpt(text: string) {
+  const model = process.env.OPENAI_MODEL ?? "gpt-5.6-sol";
+  if (!process.env.OPENAI_API_KEY) throw new Error("No OpenAI API key is configured; showing the deterministic demo replay.");
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+    body: JSON.stringify({
+      model,
+      instructions: system,
+      input: text.slice(0, 9000),
+      max_output_tokens: 700,
+      text: { format: { type: "json_schema", name: "learnscape_source_analysis", strict: true, schema: sourceAnalysisJsonSchema } },
+    }),
+  });
+  if (!response.ok) throw new Error(`GPT returned ${response.status}; showing the deterministic demo replay.`);
+  const analysis = sourceAnalysisSchema.parse(cleanJson(outputText(await response.json())));
+  return { analysis, model };
+}
+
+async function analyzeWithLlama(text: string) {
+  const model = process.env.LLAMA_MODEL ?? "Qwen3-14B-Q4_K_M.gguf";
+  const response = await fetch(`${process.env.LLAMA_BASE_URL ?? "http://127.0.0.1:8080/v1"}/chat/completions`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      model,
+      temperature: 0.1,
+      max_tokens: 500,
+      response_format: { type: "json_object" },
+      chat_template_kwargs: { enable_thinking: false },
+      messages: [{ role: "system", content: `${system} Return JSON with exactly these keys: templateId, title, summary, causalQuestion, primaryCause, primaryEffect, misconception, whyInteractive.` }, { role: "user", content: text.slice(0, 9000) }],
+    }),
+  });
+  if (!response.ok) throw new Error(`Local model returned ${response.status}; showing the deterministic demo replay.`);
+  const body = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+  const analysis = sourceAnalysisSchema.parse(cleanJson(body.choices?.[0]?.message?.content ?? "{}"));
+  return { analysis, model };
+}
+
 export async function POST(request: Request) {
   const { text, provider = "llama" } = await request.json() as { text?: string; provider?: "llama" | "gpt" };
   if (!text?.trim()) return NextResponse.json({ error: "Add some pasted textbook text before analyzing." }, { status: 400 });
-  const url = provider === "gpt" ? "https://api.openai.com/v1/chat/completions" : `${process.env.LLAMA_BASE_URL ?? "http://127.0.0.1:8080/v1"}/chat/completions`;
-  const model = provider === "gpt" ? "gpt-5.6" : (process.env.LLAMA_MODEL ?? "Qwen3-14B-Q4_K_M.gguf");
-  const headers: Record<string, string> = { "content-type": "application/json" };
-  if (provider === "gpt") {
-    if (!process.env.OPENAI_API_KEY) return NextResponse.json({ error: "GPT mode is ready but no OPENAI_API_KEY has been configured yet. Local Llama mode remains available." }, { status: 400 });
-    headers.authorization = `Bearer ${process.env.OPENAI_API_KEY}`;
-  }
   try {
-    const response = await fetch(url, { method: "POST", headers, body: JSON.stringify({ model, temperature: 0.1, max_tokens: 220, response_format: { type: "json_object" }, chat_template_kwargs: { enable_thinking: false }, messages: [{ role: "system", content: system }, { role: "user", content: text.slice(0, 9000) }] }) });
-    if (!response.ok) throw new Error(`Provider returned ${response.status}`);
-    const body = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-    const choice = cleanJson(body.choices?.[0]?.message?.content ?? "{}");
-    const selected = choice.templateId === "acid_base_titration" ? titrationBlueprint : choice.templateId === "ohms_law_circuit" ? circuitBlueprint : choice.templateId === "statistics_explorer" ? statisticsBlueprint : fallback(text);
-    const blueprint: LearnscapeBlueprint = { ...selected, id: `analysis-${Date.now()}`, title: typeof choice.title === "string" && choice.title.length < 80 ? choice.title : selected.title, source: { sourceType: "manual", extractedText: text, summary: typeof choice.summary === "string" ? choice.summary : `Learnscape extracted a supported concept from the supplied source.`, relevantExcerpts: [{ text: text.slice(0, 280), conceptIds: selected.concepts.map(c => c.id) }] } };
-    return NextResponse.json({ blueprint: blueprintSchema.parse(blueprint), provider });
+    const result = provider === "gpt" ? await analyzeWithGpt(text) : await analyzeWithLlama(text);
+    const selected = templateFor(result.analysis.templateId, text);
+    const blueprint: LearnscapeBlueprint = { ...selected, id: `analysis-${Date.now()}`, title: result.analysis.title, source: { sourceType: "manual", extractedText: text, summary: result.analysis.summary, relevantExcerpts: [{ text: text.slice(0, 280), conceptIds: selected.concepts.map(c => c.id) }] } };
+    const analysis: AnalysisMeta = { ...result.analysis, provider, live: true, model: result.model };
+    return NextResponse.json({ blueprint: blueprintSchema.parse(blueprint), analysis });
   } catch (error) {
-    return NextResponse.json({ blueprint: blueprintSchema.parse({ ...fallback(text), id: `fallback-${Date.now()}`, source: { sourceType: "manual", extractedText: text, summary: "Local model response was unavailable, so Learnscape used its deterministic classifier.", relevantExcerpts: [{ text: text.slice(0, 280), conceptIds: fallback(text).concepts.map(c => c.id) }] } }), provider: "deterministic", warning: error instanceof Error ? error.message : "Analysis fallback used" });
+    const selected = fallback(text);
+    const mapped = deterministicSourceAnalysis(text);
+    const blueprint = { ...selected, id: `fallback-${Date.now()}`, title: mapped.title, source: { sourceType: "manual" as const, extractedText: text, summary: mapped.summary, relevantExcerpts: [{ text: text.slice(0, 280), conceptIds: selected.concepts.map(c => c.id) }] } };
+    const analysis: AnalysisMeta = { ...mapped, provider: "deterministic", live: false, model: "Learnscape ruleset v1" };
+    return NextResponse.json({ blueprint: blueprintSchema.parse(blueprint), analysis, warning: error instanceof Error ? error.message : "Analysis fallback used" });
   }
 }

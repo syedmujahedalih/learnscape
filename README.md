@@ -21,7 +21,7 @@ The flagship mission also maintains a probabilistic picture of the learner's cur
 - Acid–base titration — a deterministic, simplified strong-acid/strong-base model with synchronized lab, molecular, curve, and equation views.
 - Ohm’s Law circuit lab — a closed DC circuit model with adjustable voltage, resistance, and switch state.
 - Statistics preview — an experimental mean-versus-median and outlier interaction.
-- Source workflow — local Llama analysis, deterministic fixtures, source traceability, and intentional unsupported states.
+- Source workflow — visible source-to-world transformation, local Llama analysis, OpenAI Responses API structured output, deterministic replay, source traceability, and intentional unsupported states.
 - Adaptive learning missions — prediction locks, confidence capture, misconception inference, information-guided experiment selection, transfer checks, insight scoring, and replayable concept passports.
 
 ## Run it
@@ -31,7 +31,7 @@ The flagship mission also maintains a probabilistic picture of the learner's cur
 3. Copy `.env.example` to `.env.local` if you need a non-default model/address.
 4. Run `npm run dev`.
 
-The app works without the model through deterministic sample pages. Use **Local Llama** for pasted-text classification. Image upload records the source locally; GPT vision can be enabled later by adding `OPENAI_API_KEY` server-side and selecting GPT‑5.6.
+The app works without a model through deterministic sample pages and an explicitly labeled demo replay. Use **Local** for llama.cpp source mapping. Add `OPENAI_API_KEY` server-side and select **GPT‑5.6 Sol** for live structured source analysis; override the default with `OPENAI_MODEL` if needed. Image upload currently records the selected source and asks the user to confirm extracted text before analysis.
 
 ## Scientific boundaries
 

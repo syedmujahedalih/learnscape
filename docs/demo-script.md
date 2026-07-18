@@ -7,7 +7,7 @@ Learnscape turns STEM concepts into interactive systems that reveal how a studen
 ## Before recording
 
 - Use a 16:9 browser window at 1440 × 900 or larger and hide bookmarks and notifications. The flagship is designed to remain in one frame at this size.
-- Open the deployed home page, reload once, and click **Enter the observatory** before the take to warm the 3D bundle.
+- Open the deployed home page, reload once, and click **Enter the pendulum** before the take to warm the 3D bundle.
 - Reset the mission, then return to the home page. Keep a second tab on this script.
 - Record cursor clicks as the primary action; do not scroll while speaking unless the script calls for it.
 - Use the deterministic sample path. Local Llama and GPT are valuable architecture proof, but network latency should not be in the 90-second product video.
@@ -16,14 +16,15 @@ Learnscape turns STEM concepts into interactive systems that reveal how a studen
 
 | Time | Screen action | Narration |
 |---|---|---|
-| 0:00–0:08 | Home hero and learning loop. | “Students can get an answer right without understanding what causes it. Static pages and generic chat rarely reveal that gap.” |
-| 0:08–0:16 | Click **Enter the observatory**. | “Learnscape turns a concept into an interactive system where students predict, experiment, revise, and transfer.” |
-| 0:16–0:28 | Select **The swing becomes faster**, set confidence to 80%, and choose **Test my prediction**. | “Here, a learner confidently predicts that a heavier pendulum swings faster. That prediction is evidence—not just a wrong answer.” |
-| 0:28–0:40 | Point to the automatically prepared controlled setup. Optionally open **Learning evidence** after naming the inference. | “Learnscape estimates the likely misconception and prepares a controlled mass comparison as the most useful next experiment.” |
-| 0:40–0:53 | Release the pendulum and point to its motion and energy exchange. | “Behind this simple view, a tiny learned forecast is checked against a validated physics reference: mass changes energy, but not the ideal period.” |
-| 0:53–1:04 | The comparison appears automatically. Choose **I changed my mind**. | “They must reconcile the evidence with their original claim.” |
-| 1:04–1:18 | Enter: “Mass does not change the ideal period; length controls the swing time.” Choose **lengthen the cord**. | “Then they explain the causal rule and apply it to an unfamiliar question. Progress comes from transfer, not clicking through.” |
-| 1:18–1:30 | Stamp the passport, then finish on the completion state or home thesis. | “Learnscape is not AI-generated 3D content. It is a learning world: domain model, simulation, learner model, and tutor—helping a student’s internal model move closer to reality.” |
+| 0:00–0:07 | Home hero: textbook excerpt, causal map, and pendulum world are all visible. | “Static pages tell students what happens. Generic chat can explain it. Neither reliably reveals what a student thinks causes it.” |
+| 0:07–0:15 | Click **Watch the transformation**; the source-to-world reveal appears. | “Learnscape maps the source into a causal question, a likely misconception, and a validated world where that idea can be tested.” |
+| 0:15–0:25 | Point to source, cause → effect, misconception, then click **Enter the learning world**. | “This is not arbitrary 3D generation. It is a learning blueprint grounded in the supplied material.” |
+| 0:25–0:37 | Select **The swing becomes faster**, set confidence to 80%, and choose **Test my prediction**. | “A learner predicts that a heavier pendulum swings faster. That prediction becomes useful evidence.” |
+| 0:37–0:48 | Point to the automatically prepared controlled setup. | “Learnscape estimates the likely misconception and chooses the controlled experiment with the highest learning value.” |
+| 0:48–1:00 | Release the pendulum and point to its motion and energy exchange. | “A tiny learned forecast is checked against validated physics: mass changes energy, but not the ideal period.” |
+| 1:00–1:10 | Choose **I changed my mind** after the comparison. | “The learner must reconcile the evidence with the original claim.” |
+| 1:10–1:23 | Enter the causal explanation and choose **lengthen the cord**. | “Then they explain the rule and transfer it to an unfamiliar problem. Progress comes from understanding, not clicking through.” |
+| 1:23–1:30 | Stamp the passport. | “Learnscape turns what students read into a system they can reason about—and their interactions into evidence an instructor can act on.” |
 
 Recommended final title card: **Learnscape — Predict. Experiment. Understand why.**
 
@@ -35,7 +36,7 @@ Recommended final title card: **Learnscape — Predict. Experiment. Understand w
 
 ### 0:30–1:45 — Flagship demonstration
 
-Enter the Pendulum Observatory. Select **The swing becomes faster** at 80% confidence and choose **Test my prediction**.
+Start on the home page and click **Watch the transformation**. Point to the supplied excerpt, the causal map, the likely misconception, and the selected validated world. Explain that **LIVE** means the structured blueprint came from GPT or local Llama; **DEMO REPLAY** is the honest deterministic fallback. Then enter the Pendulum Observatory, select **The swing becomes faster** at 80% confidence, and choose **Test my prediction**.
 
 “This is a common misconception: heavier objects feel as if they should swing faster. Learnscape combines the prediction and confidence with later evidence to maintain an inspectable probability distribution over possible misconceptions.”
 
@@ -69,7 +70,8 @@ Briefly show the library and source-to-blueprint path. Do not attempt a live mod
 - Probabilistic learner state updated from prediction, confidence, reflection, explanation, and transfer.
 - Entropy/information-gain experiment selection across mass, length, and energy interventions.
 - Source-grounded Zod blueprint contract and separate subject engines.
-- Local llama.cpp for no-credit development; optional GPT provider isolated server-side.
+- OpenAI Responses API with strict structured output for causal question, cause, effect, misconception, and world selection.
+- Local llama.cpp for no-credit development and an explicitly labeled deterministic replay when a provider is unavailable.
 - Deterministic, offline-safe judged path with explicit scientific boundaries.
 
 ## Why this earns a 4/5 technical-risk story

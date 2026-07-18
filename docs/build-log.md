@@ -13,3 +13,7 @@
 - Rebuilt the flagship desktop experience as one judge-readable frame: student reasoning on the left and the live world on the right.
 - Replaced generic system typography with a Manrope product face and DM Serif Display editorial face, then retuned scale, rhythm, controls, contrast, and responsive behavior around that pairing.
 - Replaced the confidence slider with three clear confidence choices and gave the experiment a focused, dark-glass control surface inside the world.
+- Reframed the landing page around Learnscape's differentiator: a visible textbook → causal map → learning world transformation.
+- Added a judge-readable transformation reveal with source grounding, cause/effect mapping, likely misconception, selected world, and honest live-versus-replay provider status.
+- Upgraded hosted inference to the OpenAI Responses API with a strict structured-output contract while preserving the llama.cpp Chat Completions path.
+- Expanded deterministic source mapping to support the flagship pendulum and keep the deployed no-credit demo reliable.
