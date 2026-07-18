@@ -11,7 +11,7 @@ export const blueprintSchema = z.object({
   relationships: z.array(z.object({ cause: z.string(), effect: z.string(), relationship: z.enum(["increases", "decreases", "balances", "conserves", "transforms", "depends_on"]), explanation: z.string() })),
   learningObjectives: z.array(z.string()),
   commonMisconceptions: z.array(z.string()),
-  recommendedExperience: z.object({ templateId: z.enum(["acid_base_titration", "ohms_law_circuit", "statistics_explorer", "unsupported"]), representation: z.enum(["3d_lab", "interactive_circuit", "2d_simulation", "graph", "probability_experiment", "timeline", "unsupported"]), rationale: z.string() }),
+  recommendedExperience: z.object({ templateId: z.enum(["pendulum_world", "acid_base_titration", "ohms_law_circuit", "statistics_explorer", "unsupported"]), representation: z.enum(["3d_lab", "3d_world", "interactive_circuit", "2d_simulation", "graph", "probability_experiment", "timeline", "unsupported"]), rationale: z.string() }),
   assumptions: z.array(z.string()), limitations: z.array(z.string()), validationStatus: z.enum(["template_validated", "experimental_preview", "unsupported"]),
 });
 

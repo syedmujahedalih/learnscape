@@ -1,6 +1,6 @@
 # Learnscape
 
-**Don’t just read it. Test your model.** Learnscape turns a textbook source into a prediction-locked learning world. Learners commit to a mental model, change one variable, compare their prediction with evidence, explain the causal relationship, and pass a transfer check.
+**Predict what happens. Discover why.** Learnscape turns course material into prediction-locked STEM worlds. Learners commit to a hypothesis, compare it with a learned forecast and validated evidence, explain the causal relationship, and pass a transfer check.
 
 ## Product wedge
 
@@ -11,10 +11,11 @@ Learnscape is not a generic course library or a points layer on top of video. It
 3. **Compare** — decide whether the evidence supports or revises the original model.
 4. **Transfer** — apply the causal relationship in a changed situation.
 
-Gamification rewards evidence and conceptual progress: an insight score, lab-notebook trail, concept-passport stamp, and discoveries tied to meaningful experimental states. The 90-second guided mission is the primary demo path.
+Gamification rewards evidence and conceptual progress: an insight score, lab-notebook trail, concept-passport stamp, and discoveries tied to meaningful experimental states. The Pendulum Observatory is the primary guided-demo path.
 
 ## What is included
 
+- Pendulum Observatory — a polished Three.js world with live kinetic/potential energy, a validated RK4 solver, and an actual trained 818-parameter transition model forecasting motion in the browser.
 - Acid–base titration — a deterministic, simplified strong-acid/strong-base model with synchronized lab, molecular, curve, and equation views.
 - Ohm’s Law circuit lab — a closed DC circuit model with adjustable voltage, resistance, and switch state.
 - Statistics preview — an experimental mean-versus-median and outlier interaction.
@@ -32,7 +33,11 @@ The app works without the model through deterministic sample pages. Use **Local 
 
 ## Scientific boundaries
 
-The titration is an idealized educational calculation, not laboratory chemistry. The circuit is not a SPICE simulator. Particle motion is conceptual. Statistics is a narrow experimental preview. Every blueprint states its validation status.
+The pendulum assumes a rigid massless cord, point-mass bob, uniform gravity, and linear damping. Its learned forecast is educational; the numerical solver remains the validated reference. The titration is an idealized educational calculation, the circuit is not a SPICE simulator, and statistics remains a narrow experimental preview. Every blueprint states its validation status.
+
+## Retrain the pendulum predictor
+
+Run `python3 scripts/train_pendulum_model.py` to regenerate the deterministic TypeScript weight artifact. The training script uses procedurally generated state transitions and records its validation score alongside the exported weights.
 
 ## Build Week notes
 

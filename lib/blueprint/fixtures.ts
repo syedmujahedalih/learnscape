@@ -15,4 +15,24 @@ export const circuitBlueprint = base("sample-circuit", "Ohm’s Law Circuit Lab"
 
 export const statisticsBlueprint = base("sample-statistics", "Outliers & Center", "statistics", "statistics_explorer", "2d_simulation", "experimental_preview", [{ id: "mean", name: "Mean", explanation: "The mean balances every data value.", importance: "primary" }, { id: "median", name: "Median", explanation: "The median is the middle ordered value.", importance: "primary" }], [{ id: "outlier", name: "Outlier", unit: "value", description: "A point far from the rest of the data.", manipulable: true }], [{ id: "mean", latex: "x̄ = Σx / n", plainLanguage: "Mean is the total divided by the count.", variableIds: ["outlier"] }]);
 
-export const sampleBlueprints = [titrationBlueprint, circuitBlueprint, statisticsBlueprint];
+export const pendulumBlueprint = base("sample-pendulum", "The Pendulum Observatory", "physics", "pendulum_world", "3d_world", "template_validated", [
+  { id: "period", name: "Period", explanation: "For modest release angles, pendulum period depends primarily on length and gravity—not bob mass.", importance: "primary" },
+  { id: "energy", name: "Energy transformation", explanation: "Gravitational potential energy becomes kinetic energy on the way down, then returns on the way up.", importance: "primary" },
+  { id: "prediction", name: "Predictive dynamics", explanation: "A learned transition model forecasts the next state and is checked against a validated numerical solver.", importance: "supporting" },
+], [
+  { id: "length", name: "Pendulum length", symbol: "L", unit: "m", description: "Distance from pivot to the center of the bob.", manipulable: true },
+  { id: "mass", name: "Bob mass", symbol: "m", unit: "kg", description: "Mass of the pendulum bob.", manipulable: true },
+  { id: "angle", name: "Release angle", symbol: "θ₀", unit: "°", description: "Starting displacement from vertical.", manipulable: true },
+], [
+  { id: "period", latex: "T ≈ 2π√(L/g)", plainLanguage: "A longer pendulum takes more time to complete a swing.", variableIds: ["length"] },
+  { id: "energy", latex: "E = ½mv² + mgh", plainLanguage: "Kinetic and potential energy trade places throughout the swing.", variableIds: ["mass", "angle"] },
+]);
+
+pendulumBlueprint.source.summary = "A pendulum transforms gravitational potential energy into kinetic energy. Its period depends on length and gravitational acceleration, while ideal bob mass does not change the period.";
+pendulumBlueprint.source.relevantExcerpts = [{ text: "A longer pendulum has a longer period; increasing bob mass changes its energy but not its ideal period.", conceptIds: ["period", "energy"] }];
+pendulumBlueprint.commonMisconceptions = ["A heavier bob swings faster.", "The pendulum moves fastest at the highest point.", "Energy disappears at the bottom of the swing."];
+pendulumBlueprint.assumptions = ["Rigid massless cord, point-mass bob, uniform gravity, and configurable linear damping."];
+pendulumBlueprint.limitations = ["The learned forecast is an educational transition model; the numerical solver remains the validated reference."];
+pendulumBlueprint.recommendedExperience.rationale = "A spatial trajectory, live energy exchange, and ghost forecast make the hidden dynamics inspectable.";
+
+export const sampleBlueprints = [pendulumBlueprint, titrationBlueprint, circuitBlueprint, statisticsBlueprint];
