@@ -42,16 +42,16 @@ function outputText(body: unknown) {
   return response.output?.flatMap(item => item.content ?? []).find(item => item.type === "output_text")?.text ?? "";
 }
 
-async function analyzeWithGpt(text: string, image?: string) {
+async function analyzeWithGpt(text: string, image: string | undefined, apiKey?: string) {
   const model = process.env.OPENAI_MODEL ?? "gpt-5.6-terra";
-  if (!process.env.OPENAI_API_KEY) throw new Error("No OpenAI API key is configured; showing the deterministic demo replay.");
+  if (!apiKey) throw new Error("No OpenAI API key is configured. Add one in Model settings or configure the site demo key.");
   const content: Array<{ type: "input_text"; text: string } | { type: "input_image"; image_url: string; detail: "low" }> = [
     { type: "input_text", text: text.trim() ? `Analyze this confirmed source text:\n\n${text.slice(0, 9000)}` : "Read the supplied textbook page. Extract the exact passage relevant to pendulum motion, then create the structured learning blueprint." },
   ];
   if (image) content.push({ type: "input_image", image_url: image, detail: "low" });
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+    headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
       model,
       instructions: system,
@@ -67,11 +67,12 @@ async function analyzeWithGpt(text: string, image?: string) {
   return { analysis, model, usage: body.usage };
 }
 
-async function analyzeWithLlama(text: string) {
-  const model = process.env.LLAMA_MODEL ?? "Qwen3-14B-Q4_K_M.gguf";
-  const response = await fetch(`${process.env.LLAMA_BASE_URL ?? "http://127.0.0.1:8080/v1"}/chat/completions`, {
+async function analyzeWithLlama(text: string, baseUrl?: string, configuredModel?: string, apiKey?: string) {
+  const model = configuredModel || process.env.LLAMA_MODEL || "Qwen3-14B-Q4_K_M.gguf";
+  const endpoint = baseUrl || process.env.LLAMA_BASE_URL || "http://127.0.0.1:8080/v1";
+  const response = await fetch(`${endpoint.replace(/\/$/, "")}/chat/completions`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...(apiKey ? { authorization: `Bearer ${apiKey}` } : {}) },
     body: JSON.stringify({
       model,
       temperature: 0.1,
@@ -89,12 +90,16 @@ async function analyzeWithLlama(text: string) {
 
 export async function POST(request: Request) {
   const { text = "", image, provider = "llama" } = await request.json() as { text?: string; image?: string; provider?: "llama" | "gpt" };
+  const openaiApiKey = request.headers.get("x-learnscape-openai-key")?.trim() || process.env.OPENAI_API_KEY;
+  const llamaBaseUrl = request.headers.get("x-learnscape-llama-base-url")?.trim();
+  const llamaModel = request.headers.get("x-learnscape-llama-model")?.trim();
+  const llamaApiKey = request.headers.get("x-learnscape-llama-key")?.trim();
   if (!text.trim() && !image) return NextResponse.json({ error: "Choose a textbook page or paste an excerpt before creating the lesson." }, { status: 400 });
   if (image && !/^data:image\/(?:png|jpeg|webp);base64,/i.test(image)) return NextResponse.json({ error: "Upload a PNG, JPEG, or WebP textbook page." }, { status: 400 });
   if (image && image.length > 6_000_000) return NextResponse.json({ error: "That page is too large. Choose an image under 4 MB." }, { status: 413 });
   if (image && provider !== "gpt") return NextResponse.json({ error: "Page images require GPT vision. Pasted text can still use your local model." }, { status: 400 });
   try {
-    const result = provider === "gpt" ? await analyzeWithGpt(text, image) : await analyzeWithLlama(text);
+    const result = provider === "gpt" ? await analyzeWithGpt(text, image, openaiApiKey) : await analyzeWithLlama(text, llamaBaseUrl, llamaModel, llamaApiKey);
     const selected = templateFor(result.analysis.templateId, text);
     const extractedText = text.trim() || result.analysis.sourceExcerpt;
     const blueprint: LearnscapeBlueprint = { ...selected, id: `analysis-${Date.now()}`, title: result.analysis.title, source: { sourceType: image ? "image" : "manual", extractedText, summary: result.analysis.summary, relevantExcerpts: [{ text: result.analysis.sourceExcerpt, conceptIds: selected.concepts.map(c => c.id) }] } };

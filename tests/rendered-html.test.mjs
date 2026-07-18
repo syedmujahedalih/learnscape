@@ -22,6 +22,7 @@ test("server renders one coherent flagship Learnscape experience", async () => {
   assert.match(html, /<title>Learnscape — Turn a page into a lesson\.<\/title>/i);
   assert.match(html, /Turn a page/);
   assert.match(html, /Try the pendulum lesson/);
+  assert.match(html, /Model settings/);
   assert.match(html, /Start with their belief/);
   assert.match(html, /Choose the useful test/);
   assert.match(html, /Finish with transfer/);

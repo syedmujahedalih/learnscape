@@ -16,6 +16,8 @@ type View = "home" | "upload" | "reveal" | "world";
 type WorldTab = "lab" | "molecular" | "curve" | "equation";
 
 const sampleText = "For a simple pendulum at modest angles, the period is approximately T = 2π√(L/g). The bob’s mass changes its kinetic and potential energy, but does not change the ideal period.";
+const defaultLlamaBaseUrl = "http://127.0.0.1:8080/v1";
+const defaultLlamaModel = "Qwen3-14B-Q4_K_M.gguf";
 const statusLabel = (status: LearnscapeBlueprint["validationStatus"]) => status === "template_validated" ? "Validated template" : status === "experimental_preview" ? "Experimental preview" : "Unsupported concept";
 
 async function compressPage(file: File) {
@@ -45,6 +47,11 @@ export default function Home() {
   const [view, setView] = useState<View>("home");
   const [blueprint, setBlueprint] = useState<LearnscapeBlueprint>(pendulumBlueprint);
   const [provider, setProvider] = useState<"llama" | "gpt">("llama");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [openaiApiKey, setOpenaiApiKey] = useState("");
+  const [llamaBaseUrl, setLlamaBaseUrl] = useState(defaultLlamaBaseUrl);
+  const [llamaModel, setLlamaModel] = useState(defaultLlamaModel);
+  const [llamaApiKey, setLlamaApiKey] = useState("");
   const [sourceText, setSourceText] = useState(sampleText);
   const [fileName, setFileName] = useState("");
   const [pageImage, setPageImage] = useState("");
@@ -97,7 +104,12 @@ export default function Home() {
   const analyze = async (text = sourceText, selectedProvider = provider, image = pageImage) => {
     setAnalyzing(true); setNotice("");
     try {
-      const response = await fetch("/api/analyze", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, image: image || undefined, provider: selectedProvider }) });
+      const headers: Record<string, string> = { "content-type": "application/json" };
+      if (openaiApiKey.trim()) headers["x-learnscape-openai-key"] = openaiApiKey.trim();
+      if (llamaBaseUrl.trim()) headers["x-learnscape-llama-base-url"] = llamaBaseUrl.trim();
+      if (llamaModel.trim()) headers["x-learnscape-llama-model"] = llamaModel.trim();
+      if (llamaApiKey.trim()) headers["x-learnscape-llama-key"] = llamaApiKey.trim();
+      const response = await fetch("/api/analyze", { method: "POST", headers, body: JSON.stringify({ text, image: image || undefined, provider: selectedProvider }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Analysis did not complete.");
       setBlueprint(data.blueprint); setAnalysisMeta(data.analysis); setSourceText(data.blueprint.source.extractedText ?? data.analysis.sourceExcerpt); setNotice(data.warning ?? ""); setView("reveal");
@@ -121,9 +133,11 @@ export default function Home() {
     <header className="topbar">
       <button className="brand" onClick={() => setView("home")} aria-label="Go to Learnscape home"><span className="brand-mark">L</span><span>learnscape</span></button>
       <div className="top-meta">
-        <button className="text-button" onClick={() => setView("upload")}>Bring a page</button><button className="nav-lesson" onClick={startGuidedDemo}>Try the lesson</button>
+        <button className="text-button" onClick={() => setView("upload")}>Bring a page</button><button className="text-button" onClick={() => setSettingsOpen(true)}>Model settings</button><button className="nav-lesson" onClick={startGuidedDemo}>Try the lesson</button>
       </div>
     </header>
+
+    {settingsOpen && <div className="settings-backdrop" role="presentation" onClick={() => setSettingsOpen(false)}><section className="settings-card" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={event => event.stopPropagation()}><div className="settings-heading"><div><p className="kicker">BRING YOUR OWN MODEL</p><h2 id="settings-title">Model settings</h2></div><button className="text-button" onClick={() => setSettingsOpen(false)}>Close</button></div><p className="settings-intro">Use your own provider credentials for this session. Learnscape sends them only when you create a lesson; they are not stored in the project or saved by the server.</p><label className="settings-field">OPENAI API KEY<input type="password" autoComplete="off" value={openaiApiKey} onChange={event => setOpenaiApiKey(event.target.value)} placeholder="sk-…" /></label><small className="settings-help">Needed for GPT text analysis and all page-image uploads. Your key is never shown back after you leave this tab.</small><label className="settings-field">LOCAL LLAMA SERVER URL<input type="url" value={llamaBaseUrl} onChange={event => setLlamaBaseUrl(event.target.value)} placeholder={defaultLlamaBaseUrl} /></label><label className="settings-field">LOCAL MODEL NAME<input value={llamaModel} onChange={event => setLlamaModel(event.target.value)} placeholder={defaultLlamaModel} /></label><label className="settings-field">LOCAL SERVER KEY <span>(OPTIONAL)</span><input type="password" autoComplete="off" value={llamaApiKey} onChange={event => setLlamaApiKey(event.target.value)} placeholder="Bearer token, if your server requires one" /></label><small className="settings-help">Local mode works when this server is reachable by the Learnscape runtime. A Mac-only localhost server is available to your local app, not to the hosted site.</small><div className="settings-actions"><button className="secondary-button" onClick={() => { setOpenaiApiKey(""); setLlamaApiKey(""); setSettingsOpen(false); }}>Clear keys</button><button className="primary-button" onClick={() => setSettingsOpen(false)}>Use these settings <span>→</span></button></div></section></div>}
 
     {view === "home" && <section className="home-view">
       <div className="eyebrow">CAUSAL LEARNING WORLDS <span>•</span> FOR STEM</div>
