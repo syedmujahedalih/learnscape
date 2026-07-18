@@ -88,6 +88,12 @@ export function choosePendulumExperiment(beliefs: PendulumBeliefs): AdaptiveExpe
   }).sort((a, b) => b.expectedLearningGain - a.expectedLearningGain)[0];
 }
 
+export function getPendulumExperiment(id: AdaptiveExperiment["id"]): AdaptiveExperiment {
+  const experiment = experimentDefinitions.find(item => item.id === id);
+  if (!experiment) throw new Error(`Unknown pendulum experiment: ${id}`);
+  return { id: experiment.id, target: experiment.target, title: experiment.title, prompt: experiment.prompt, setup: experiment.setup, expectedLearningGain: 0 };
+}
+
 export const pendulumBeliefLabels: Record<PendulumBeliefId, string> = {
   mass_period: "Mass changes swing time",
   energy_location: "Energy peaks in the wrong place",
