@@ -3,7 +3,7 @@ import { blueprintSchema, type LearnscapeBlueprint } from "@/lib/blueprint/schem
 import { pendulumBlueprint } from "@/lib/blueprint/fixtures";
 import { deterministicSourceAnalysis, sourceAnalysisJsonSchema, sourceAnalysisSchema, type AnalysisMeta, type SourceAnalysis } from "@/lib/blueprint/source-analysis";
 
-const system = `You are Learnscape's pedagogical source mapper for a focused pendulum-motion pilot. Convert a supplied excerpt into a concise causal learning blueprint. Identify the relationship a student should predict, the most plausible misconception worth testing, and why interaction adds value. Choose pendulum_world only when the source clearly concerns pendulum motion; choose unsupported for every other topic. Do not invent claims beyond the supplied source.`;
+const system = `You are Learnscape's pedagogical source mapper for a focused pendulum-motion pilot. Convert a supplied excerpt into a concise causal learning blueprint. Identify the relationship a student should predict, the most plausible misconception worth testing, and why interaction adds value. Choose pendulum_world only when the source clearly concerns pendulum motion; choose unsupported for every other topic. Do not invent claims beyond the supplied source. sourceExcerpt must be a faithful transcription or quotation from the source and no longer than 500 characters.`;
 
 function unsupportedBlueprint() {
   return {
@@ -42,23 +42,29 @@ function outputText(body: unknown) {
   return response.output?.flatMap(item => item.content ?? []).find(item => item.type === "output_text")?.text ?? "";
 }
 
-async function analyzeWithGpt(text: string) {
-  const model = process.env.OPENAI_MODEL ?? "gpt-5.6-sol";
+async function analyzeWithGpt(text: string, image?: string) {
+  const model = process.env.OPENAI_MODEL ?? "gpt-5.6-terra";
   if (!process.env.OPENAI_API_KEY) throw new Error("No OpenAI API key is configured; showing the deterministic demo replay.");
+  const content: Array<{ type: "input_text"; text: string } | { type: "input_image"; image_url: string; detail: "low" }> = [
+    { type: "input_text", text: text.trim() ? `Analyze this confirmed source text:\n\n${text.slice(0, 9000)}` : "Read the supplied textbook page. Extract the exact passage relevant to pendulum motion, then create the structured learning blueprint." },
+  ];
+  if (image) content.push({ type: "input_image", image_url: image, detail: "low" });
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
     body: JSON.stringify({
       model,
       instructions: system,
-      input: text.slice(0, 9000),
-      max_output_tokens: 700,
+      input: [{ role: "user", content }],
+      reasoning: { effort: "none" },
+      max_output_tokens: 550,
       text: { format: { type: "json_schema", name: "learnscape_source_analysis", strict: true, schema: sourceAnalysisJsonSchema } },
     }),
   });
   if (!response.ok) throw new Error(`GPT returned ${response.status}; showing the deterministic demo replay.`);
-  const analysis = sourceAnalysisSchema.parse(cleanJson(outputText(await response.json())));
-  return { analysis, model };
+  const body = await response.json() as { output_text?: string; output?: Array<{ content?: Array<{ type?: string; text?: string }> }>; usage?: { input_tokens?: number; output_tokens?: number; total_tokens?: number } };
+  const analysis = sourceAnalysisSchema.parse(cleanJson(outputText(body)));
+  return { analysis, model, usage: body.usage };
 }
 
 async function analyzeWithLlama(text: string) {
@@ -72,7 +78,7 @@ async function analyzeWithLlama(text: string) {
       max_tokens: 500,
       response_format: { type: "json_object" },
       chat_template_kwargs: { enable_thinking: false },
-      messages: [{ role: "system", content: `${system} Return JSON with exactly these keys: templateId, title, summary, causalQuestion, primaryCause, primaryEffect, misconception, whyInteractive.` }, { role: "user", content: text.slice(0, 9000) }],
+      messages: [{ role: "system", content: `${system} Return JSON with exactly these keys: templateId, title, summary, sourceExcerpt, causalQuestion, primaryCause, primaryEffect, misconception, whyInteractive.` }, { role: "user", content: text.slice(0, 9000) }],
     }),
   });
   if (!response.ok) throw new Error(`Local model returned ${response.status}; showing the deterministic demo replay.`);
@@ -82,15 +88,20 @@ async function analyzeWithLlama(text: string) {
 }
 
 export async function POST(request: Request) {
-  const { text, provider = "llama" } = await request.json() as { text?: string; provider?: "llama" | "gpt" };
-  if (!text?.trim()) return NextResponse.json({ error: "Add some pasted textbook text before analyzing." }, { status: 400 });
+  const { text = "", image, provider = "llama" } = await request.json() as { text?: string; image?: string; provider?: "llama" | "gpt" };
+  if (!text.trim() && !image) return NextResponse.json({ error: "Choose a textbook page or paste an excerpt before creating the lesson." }, { status: 400 });
+  if (image && !/^data:image\/(?:png|jpeg|webp);base64,/i.test(image)) return NextResponse.json({ error: "Upload a PNG, JPEG, or WebP textbook page." }, { status: 400 });
+  if (image && image.length > 6_000_000) return NextResponse.json({ error: "That page is too large. Choose an image under 4 MB." }, { status: 413 });
+  if (image && provider !== "gpt") return NextResponse.json({ error: "Page images require GPT vision. Pasted text can still use your local model." }, { status: 400 });
   try {
-    const result = provider === "gpt" ? await analyzeWithGpt(text) : await analyzeWithLlama(text);
+    const result = provider === "gpt" ? await analyzeWithGpt(text, image) : await analyzeWithLlama(text);
     const selected = templateFor(result.analysis.templateId, text);
-    const blueprint: LearnscapeBlueprint = { ...selected, id: `analysis-${Date.now()}`, title: result.analysis.title, source: { sourceType: "manual", extractedText: text, summary: result.analysis.summary, relevantExcerpts: [{ text: text.slice(0, 280), conceptIds: selected.concepts.map(c => c.id) }] } };
+    const extractedText = text.trim() || result.analysis.sourceExcerpt;
+    const blueprint: LearnscapeBlueprint = { ...selected, id: `analysis-${Date.now()}`, title: result.analysis.title, source: { sourceType: image ? "image" : "manual", extractedText, summary: result.analysis.summary, relevantExcerpts: [{ text: result.analysis.sourceExcerpt, conceptIds: selected.concepts.map(c => c.id) }] } };
     const analysis: AnalysisMeta = { ...result.analysis, provider, live: true, model: result.model };
-    return NextResponse.json({ blueprint: blueprintSchema.parse(blueprint), analysis });
+    return NextResponse.json({ blueprint: blueprintSchema.parse(blueprint), analysis, usage: "usage" in result ? result.usage : undefined });
   } catch (error) {
+    if (image) return NextResponse.json({ error: error instanceof Error ? error.message.replace("; showing the deterministic demo replay.", ".") : "The page could not be read." }, { status: 503 });
     const selected = fallback(text);
     const mapped = deterministicSourceAnalysis(text);
     const blueprint = { ...selected, id: `fallback-${Date.now()}`, title: mapped.title, source: { sourceType: "manual" as const, extractedText: text, summary: mapped.summary, relevantExcerpts: [{ text: text.slice(0, 280), conceptIds: selected.concepts.map(c => c.id) }] } };

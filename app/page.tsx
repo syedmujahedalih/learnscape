@@ -18,12 +18,36 @@ type WorldTab = "lab" | "molecular" | "curve" | "equation";
 const sampleText = "For a simple pendulum at modest angles, the period is approximately T = 2π√(L/g). The bob’s mass changes its kinetic and potential energy, but does not change the ideal period.";
 const statusLabel = (status: LearnscapeBlueprint["validationStatus"]) => status === "template_validated" ? "Validated template" : status === "experimental_preview" ? "Experimental preview" : "Unsupported concept";
 
+async function compressPage(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      const longestSide = Math.max(image.naturalWidth, image.naturalHeight);
+      const scale = Math.min(1, 1600 / longestSide);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      const context = canvas.getContext("2d");
+      if (!context) { URL.revokeObjectURL(objectUrl); reject(new Error("Canvas is unavailable.")); return; }
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL("image/jpeg", .82);
+      URL.revokeObjectURL(objectUrl);
+      if (dataUrl.length > 6_000_000) { reject(new Error("Prepared image is too large.")); return; }
+      resolve(dataUrl);
+    };
+    image.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Image could not be read.")); };
+    image.src = objectUrl;
+  });
+}
+
 export default function Home() {
   const [view, setView] = useState<View>("home");
   const [blueprint, setBlueprint] = useState<LearnscapeBlueprint>(pendulumBlueprint);
   const [provider, setProvider] = useState<"llama" | "gpt">("llama");
   const [sourceText, setSourceText] = useState(sampleText);
   const [fileName, setFileName] = useState("");
+  const [pageImage, setPageImage] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [notice, setNotice] = useState("");
   const [analysisMeta, setAnalysisMeta] = useState<AnalysisMeta>({ ...analysisFromBlueprint(pendulumBlueprint), provider: "deterministic", live: false, model: "Learnscape demo replay" });
@@ -70,18 +94,26 @@ export default function Home() {
     if (adaptiveExperiment.id === "trace_energy") { setPendulumLength(1.4); setPendulumMass(1); setPendulumAngle(60); setPendulumDamping(0); }
     setPendulumReleased(false); setPreparedExperiment(adaptiveExperiment);
   };
-  const analyze = async (text = sourceText, selectedProvider = provider) => {
+  const analyze = async (text = sourceText, selectedProvider = provider, image = pageImage) => {
     setAnalyzing(true); setNotice("");
     try {
-      const response = await fetch("/api/analyze", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, provider: selectedProvider }) });
+      const response = await fetch("/api/analyze", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, image: image || undefined, provider: selectedProvider }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Analysis did not complete.");
-      setBlueprint(data.blueprint); setAnalysisMeta(data.analysis); setNotice(data.warning ?? ""); setView("reveal");
+      setBlueprint(data.blueprint); setAnalysisMeta(data.analysis); setSourceText(data.blueprint.source.extractedText ?? data.analysis.sourceExcerpt); setNotice(data.warning ?? ""); setView("reveal");
     } catch (error) { setNotice(error instanceof Error ? error.message : "Analysis did not complete."); }
     finally { setAnalyzing(false); }
   };
-  const runSourceDemo = () => { setSourceText(sampleText); setProvider("gpt"); void analyze(sampleText, "gpt"); };
-  const onFile = (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file) return; setFileName(file.name); setNotice("Image selected. Confirm the extracted text below before analysis; GPT vision can be enabled later."); };
+  const runSourceDemo = () => { setPageImage(""); setFileName(""); setSourceText(sampleText); setProvider("gpt"); void analyze(sampleText, "gpt", ""); };
+  const onFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]; if (!file) return;
+    if (!/^image\/(png|jpeg|webp)$/i.test(file.type)) { setNotice("Choose a PNG, JPEG, or WebP page image."); return; }
+    try {
+      const compressed = await compressPage(file);
+      setFileName(file.name); setPageImage(compressed); setSourceText(""); setProvider("gpt");
+      setNotice("Page ready. GPT will read it and create the lesson in one request.");
+    } catch { setNotice("That image could not be prepared. Try a PNG or JPEG screenshot."); }
+  };
   const onPendulumExperiment = () => { setPendulumReleased(true); if (missionStep === 2) setMissionStep(3); };
   const mission = worldKind !== "unsupported" ? <Mission kind={worldKind} missionStep={missionStep} setMissionStep={setMissionStep} prediction={prediction} setPrediction={setPrediction} confidence={confidence} setConfidence={setConfidence} hasExperimented={hasExperimented} outcome={outcome} resultReviewed={resultReviewed} setResultReviewed={setResultReviewed} explanation={explanation} setExplanation={setExplanation} transferChoice={transferChoice} setTransferChoice={setTransferChoice} missionComplete={missionComplete} setMissionComplete={setMissionComplete} score={insightScore} achievement={achievement} onReset={resetMission} adaptation={worldKind === "pendulum_world" ? { beliefs: pendulumBeliefs, experiment: activeExperiment, onPrepare: prepareAdaptiveExperiment } : null} /> : null;
 
@@ -89,14 +121,13 @@ export default function Home() {
     <header className="topbar">
       <button className="brand" onClick={() => setView("home")} aria-label="Go to Learnscape home"><span className="brand-mark">L</span><span>learnscape</span></button>
       <div className="top-meta">
-        <span className="presence"><i />One validated flagship</span>
         <button className="text-button" onClick={() => setView("upload")}>Bring a page</button><button className="nav-lesson" onClick={startGuidedDemo}>Try the lesson</button>
       </div>
     </header>
 
     {view === "home" && <section className="home-view">
       <div className="eyebrow">CAUSAL LEARNING WORLDS <span>•</span> FOR STEM</div>
-      <div className="hero-grid"><div className="hero-copy"><p className="kicker">ONE CONCEPT. ONE QUESTION. ONE USEFUL EXPERIMENT.</p><h1>Turn a page<br/>into a <em>lesson.</em></h1><p className="hero-description">Learnscape finds the idea worth testing, asks the student to predict, and chooses an experiment that can change their mind.</p><div className="hero-actions"><button className="primary-button" disabled={analyzing} onClick={runSourceDemo}>{analyzing ? "Reading the page…" : "See how it works"} <span>↗</span></button><button className="secondary-button demo-button" onClick={startGuidedDemo}>Try the pendulum lesson</button></div><div className="learning-loop"><span>Bring a page</span><b>→</b><span>Make a prediction</span><b>→</b><span>Run one test</span><b>→</b><span>Apply the idea</span></div></div>
+      <div className="hero-grid"><div className="hero-copy"><h1>Turn a page<br/>into a <em>lesson.</em></h1><p className="hero-description">Learnscape finds the idea worth testing, asks the student to predict, and chooses an experiment that can change their mind.</p><div className="hero-actions"><button className="primary-button" disabled={analyzing} onClick={runSourceDemo}>{analyzing ? "Reading the page…" : "See how it works"} <span>↗</span></button><button className="secondary-button demo-button" onClick={startGuidedDemo}>Try the pendulum lesson</button></div><div className="learning-loop"><span>Bring a page</span><b>→</b><span>Make a prediction</span><b>→</b><span>Run one test</span><b>→</b><span>Apply the idea</span></div></div>
         <div className="hero-stage pendulum-hero source-world-hero" aria-label="A textbook excerpt becoming an interactive pendulum lesson"><div className="stage-label">PAGE → TESTABLE LESSON <b>PENDULUM PILOT</b></div><article className="hero-source-card"><span>FROM THE COURSE PAGE</span><p>“For modest angles, <b>T ≈ 2π√(L/g)</b>. Bob mass does not change the ideal period.”</p><small>physics · oscillatory motion</small></article><div className="hero-causal-map"><span>WHAT CHANGES WHAT?</span><div><b>length</b><i>changes</i><b>swing time</b></div><small>belief worth testing: heavier swings faster</small></div><div className="hero-pendulum"><div className="hero-cord"/><div className="hero-bob"/></div><div className="hero-ghost"><div/><i/></div><div className="hero-orbit"/><div className="stage-readout"><span>LESSON READY</span><strong>01</strong><small>predict · test · explain</small></div><div className="energy-mini"><span><i/></span><span><i/></span><small>PE ↔ KE</small></div></div></div>
 
       <section className="value-strip"><article><span>01</span><div><b>Start with their belief</b><p>Students predict before they can manipulate the system.</p></div></article><article><span>02</span><div><b>Choose the useful test</b><p>The next experiment responds to how the student answered.</p></div></article><article><span>03</span><div><b>Finish with transfer</b><p>Understanding means applying the idea in a changed situation.</p></div></article></section>
@@ -104,7 +135,7 @@ export default function Home() {
       <section className="platform-thesis"><div className="platform-copy"><p className="kicker">WHY THIS IS MORE THAN A SIMULATION</p><h2>Four systems.<br/><em>One learning loop.</em></h2><p>The pendulum is our first deeply built example—not a claim that every subject is already solved. The platform connects scientific truth, an interactive experiment, a picture of the learner’s thinking, and timely guidance.</p><button className="primary-button" onClick={startGuidedDemo}>Experience the full loop <span>→</span></button></div><div className="platform-stack"><article><span>01</span><div><b>Scientific model</b><p>A validated physics reference defines what is true.</p></div></article><article><span>02</span><div><b>Interactive experiment</b><p>The student changes one variable and sees the result.</p></div></article><article><span>03</span><div><b>Learner understanding</b><p>Predictions and explanations reveal what they currently believe.</p></div></article><article><span>04</span><div><b>Adaptive guidance</b><p>Learnscape chooses the next test and checks transfer.</p></div></article></div></section>
     </section>}
 
-    {view === "upload" && <section className="workflow-view"><div className="workflow-rail"><p className="kicker">PENDULUM PILOT</p><h2>Bring in the page.</h2><p>For this prototype, Learnscape turns a pendulum concept into one validated prediction-and-experiment lesson.</p><ol><li className="active">1 <span>Course page</span></li><li>2 <span>Testable idea</span></li><li>3 <span>Student lesson</span></li></ol></div><div className="upload-panel"><div className="panel-top"><span className="eyebrow">START WITH YOUR SOURCE</span><button className="text-button" onClick={() => setView("home")}>Cancel</button></div><div className="drop-zone"><input id="source-image" type="file" accept="image/*" onChange={onFile}/><label htmlFor="source-image"><span className="upload-icon">↑</span><strong>{fileName || "Choose a pendulum textbook page"}</strong><small>or paste the relevant paragraph below</small></label></div><div className="or-line"><span>DEMO-SAFE EXAMPLE</span></div><div className="sample-pills"><button onClick={() => { setBlueprint(pendulumBlueprint); setSourceText(sampleText); }}>Use the pendulum excerpt</button></div><label className="field-label">COURSE EXCERPT<textarea value={sourceText} onChange={event => setSourceText(event.target.value)} placeholder="Paste a paragraph about pendulum motion…" /></label><div className="provider-row"><div><strong>Read the learning opportunity</strong><small>Local mode uses your Llama server. GPT runs live when a hosted key is connected.</small></div><div className="provider-toggle"><button className={provider === "llama" ? "selected" : ""} onClick={() => setProvider("llama")}>Local</button><button className={provider === "gpt" ? "selected" : ""} onClick={() => setProvider("gpt")}>GPT</button></div></div>{notice && <p className="notice">{notice}</p>}<button className="primary-button wide" disabled={analyzing} onClick={() => void analyze()}>{analyzing ? "Finding the testable idea…" : "Create the lesson"}<span>→</span></button></div></section>}
+    {view === "upload" && <section className="workflow-view"><div className="workflow-rail"><p className="kicker">PENDULUM PILOT</p><h2>Bring in the page.</h2><p>For this prototype, Learnscape turns a pendulum concept into one validated prediction-and-experiment lesson.</p><ol><li className="active">1 <span>Course page</span></li><li>2 <span>Testable idea</span></li><li>3 <span>Student lesson</span></li></ol></div><div className="upload-panel"><div className="panel-top"><span className="eyebrow">START WITH YOUR SOURCE</span><button className="text-button" onClick={() => setView("home")}>Cancel</button></div><div className={`drop-zone ${pageImage ? "has-page" : ""}`} style={pageImage ? { backgroundImage: `linear-gradient(rgba(13,22,40,.18),rgba(13,22,40,.18)),url(${pageImage})` } : undefined}><input id="source-image" type="file" accept="image/png,image/jpeg,image/webp" onChange={onFile}/><label htmlFor="source-image"><span className="upload-icon">{pageImage ? "✓" : "↑"}</span><strong>{fileName || "Choose a pendulum textbook page"}</strong><small>{pageImage ? "Click to replace this page" : "PNG, JPEG, or WebP · compressed before upload"}</small></label></div><div className="or-line"><span>OR USE THE EXAMPLE</span></div><div className="sample-pills"><button onClick={() => { setPageImage(""); setFileName(""); setBlueprint(pendulumBlueprint); setSourceText(sampleText); }}>Use the pendulum excerpt</button></div><label className="field-label">{pageImage ? "OPTIONAL NOTE FOR GPT" : "COURSE EXCERPT"}<textarea value={sourceText} onChange={event => setSourceText(event.target.value)} placeholder={pageImage ? "Add context only if the page needs it…" : "Paste a paragraph about pendulum motion…"} /></label><div className="provider-row"><div><strong>{pageImage ? "Read this page with GPT vision" : "Read the learning opportunity"}</strong><small>{pageImage ? "One compressed image · low detail · one request" : "Pasted text can use your local model or GPT."}</small></div><div className="provider-toggle"><button disabled={Boolean(pageImage)} className={provider === "llama" ? "selected" : ""} onClick={() => setProvider("llama")}>Local</button><button className={provider === "gpt" ? "selected" : ""} onClick={() => setProvider("gpt")}>GPT</button></div></div>{notice && <p className="notice">{notice}</p>}<button className="primary-button wide" disabled={analyzing || (!sourceText.trim() && !pageImage)} onClick={() => void analyze()}>{analyzing ? "Reading the page…" : "Create the lesson"}<span>→</span></button></div></section>}
 
     {view === "reveal" && <section className="reveal-view"><div className="reveal-top"><button className="back" onClick={() => setView("upload")}>← Course page</button><div className={`provider-proof ${analysisMeta.live ? "is-live" : "is-replay"}`}><i/><span>{analysisMeta.live ? `LIVE · ${analysisMeta.model}` : "DEMO REPLAY · CONNECT A MODEL TO RUN LIVE"}</span></div></div><div className="reveal-heading"><p className="kicker">PAGE → TESTABLE LESSON</p><h1>The page became a <em>question.</em></h1><p>Learnscape does not invent a spectacle. It finds the relationship a student should understand, the belief worth testing, and the experiment that can create evidence.</p></div><div className="transformation-grid"><article className="transform-source"><span>01 · COURSE PAGE</span><h2>What the student reads</h2><p>“{sourceText.slice(0, 260)}{sourceText.length > 260 ? "…" : ""}”</p><small>Grounded in supplied material</small></article><article className="transform-map"><span>02 · WHAT CHANGES WHAT</span><h2>{analysisMeta.causalQuestion}</h2><div className="cause-effect"><b>{analysisMeta.primaryCause}</b><i>changes</i><b>{analysisMeta.primaryEffect}</b></div><div className="misconception-card"><small>BELIEF WORTH TESTING</small><strong>“{analysisMeta.misconception}”</strong></div></article><article className="transform-world"><span>03 · THE EXPERIMENT</span><div className="mini-pendulum"><i/><b/></div><h2>The Pendulum Lesson</h2><p>{analysisMeta.whyInteractive}</p><small className={`badge ${blueprint.validationStatus}`}>{statusLabel(blueprint.validationStatus)}</small></article></div>{notice && <p className="reveal-notice">{notice}</p>}<div className="reveal-actions"><button className="primary-button" onClick={() => openWorld(false)}>Start the lesson <span>→</span></button></div></section>}
 
