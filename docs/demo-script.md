@@ -18,10 +18,10 @@ Learnscape turns STEM concepts into interactive systems that reveal how a studen
 |---|---|---|
 | 0:00–0:08 | Home hero and learning loop. | “Students can get an answer right without understanding what causes it. Static pages and generic chat rarely reveal that gap.” |
 | 0:08–0:16 | Click **Enter the observatory**. | “Learnscape turns a concept into an interactive system where students predict, experiment, revise, and transfer.” |
-| 0:16–0:28 | Select **The swing becomes faster**, set confidence to 80%, and lock. | “Here, a learner confidently predicts that a heavier pendulum swings faster. That prediction is evidence—not just a wrong answer.” |
-| 0:28–0:40 | In the notebook, briefly open **Instructor lens**. Then click **Set up experiment**. | “Learnscape estimates the likely misconception and chooses a controlled mass comparison as the most useful next experiment.” |
-| 0:40–0:53 | Release the pendulum; point to the actual motion, forecast, energy, and physics check. | “The learner watches the real-time world, a tiny learned forecast, and a validated physics reference agree: mass changes energy, but not the ideal period.” |
-| 0:53–1:04 | Click **Compare with prediction**, then **I changed my thinking**. | “They must reconcile the evidence with their original claim.” |
+| 0:16–0:28 | Select **The swing becomes faster**, set confidence to 80%, and choose **Test my prediction**. | “Here, a learner confidently predicts that a heavier pendulum swings faster. That prediction is evidence—not just a wrong answer.” |
+| 0:28–0:40 | Point to the automatically prepared controlled setup. Optionally open **Learning evidence** after naming the inference. | “Learnscape estimates the likely misconception and prepares a controlled mass comparison as the most useful next experiment.” |
+| 0:40–0:53 | Release the pendulum and point to its motion and energy exchange. | “Behind this simple view, a tiny learned forecast is checked against a validated physics reference: mass changes energy, but not the ideal period.” |
+| 0:53–1:04 | The comparison appears automatically. Choose **I changed my mind**. | “They must reconcile the evidence with their original claim.” |
 | 1:04–1:18 | Enter: “Mass does not change the ideal period; length controls the swing time.” Choose **lengthen the cord**. | “Then they explain the causal rule and apply it to an unfamiliar question. Progress comes from transfer, not clicking through.” |
 | 1:18–1:30 | Stamp the passport, then finish on the completion state or home thesis. | “Learnscape is not AI-generated 3D content. It is a learning world: domain model, simulation, learner model, and tutor—helping a student’s internal model move closer to reality.” |
 
@@ -35,11 +35,11 @@ Recommended final title card: **Learnscape — Predict. Experiment. Understand w
 
 ### 0:30–1:45 — Flagship demonstration
 
-Enter the Pendulum Observatory. Select **The swing becomes faster** at 80% confidence and lock it.
+Enter the Pendulum Observatory. Select **The swing becomes faster** at 80% confidence and choose **Test my prediction**.
 
 “This is a common misconception: heavier objects feel as if they should swing faster. Learnscape combines the prediction and confidence with later evidence to maintain an inspectable probability distribution over possible misconceptions.”
 
-Open **Instructor lens** and click **Set up experiment**.
+Point out the automatically prepared test. Open **Learning evidence** only if the judge asks how the path was selected.
 
 “Instead of giving the answer, it estimates which controlled experiment has the highest learning value. For this learner it holds length and angle constant and changes mass. The choice stays fixed while evidence is collected.”
 

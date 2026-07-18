@@ -11,7 +11,7 @@ Learnscape is not a generic course library or a points layer on top of video. It
 3. **Compare** — decide whether the evidence supports or revises the original model.
 4. **Transfer** — apply the causal relationship in a changed situation.
 
-Gamification rewards evidence and conceptual progress: an insight score, lab-notebook trail, concept-passport stamp, and discoveries tied to meaningful experimental states. The Pendulum Observatory is the primary guided-demo path.
+The student path stays deliberately small: Predict, Test, Explain. Evidence, free exploration, and instructor diagnostics remain available on demand without competing with the next action. The Pendulum Observatory is the primary demo path.
 
 The flagship mission also maintains a probabilistic picture of the learner's current misconception. It combines their prediction, confidence, reflection, explanation, and transfer response, then selects the experiment with the highest expected learning value. The recommendation is locked while the student runs it so the evidence trail stays coherent. An optional instructor lens makes the inference and recommendation inspectable.
 

@@ -8,3 +8,5 @@
 - An entropy-based selector recommends a controlled mass, length, or energy experiment and locks that choice during evidence collection.
 - Student-facing copy now uses “forecast,” “physics check,” and “thinking” while technical details remain available in optional disclosure panels.
 - Added automated checks for learner-state normalization, misconception detection, experiment choice, and belief revision.
+- Simplified the student experience to three visible steps—Predict, Test, Explain—with automatic experiment setup and one primary action per state.
+- Moved free controls, forecast mechanics, and instructor evidence behind optional disclosures so the causal task remains the visual priority.
