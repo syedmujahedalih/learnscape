@@ -25,12 +25,17 @@ Earlier chemistry, circuits, and statistics engines remain in the repository as 
 
 ## Run it
 
-1. Install dependencies with `npm install`.
-2. Start your llama.cpp server (the local configuration is in `.env.example`).
-3. Copy `.env.example` to `.env.local` if you need a non-default model/address.
-4. Run `npm run dev`.
+```bash
+npm install
+cp .env.example .env.local
+npm run dev
+```
 
-The app works without a model through deterministic sample pages and an explicitly labeled demo replay. Use **Local** for llama.cpp source mapping. Add `OPENAI_API_KEY` server-side and select **GPT‑5.6 Sol** for live structured source analysis; override the default with `OPENAI_MODEL` if needed. Image upload currently records the selected source and asks the user to confirm extracted text before analysis.
+Open the local URL printed by the terminal. To test a production build locally, run `npm run build` followed by `npm run start`.
+
+The app works without a model through the deterministic sample and explicitly labeled demo replay. For llama.cpp source mapping, start your server and set `LLAMA_BASE_URL` and `LLAMA_MODEL` in `.env.local`. A public Learnscape deployment cannot reach `127.0.0.1` on your Mac; run Learnscape locally, or make the model available through an authenticated HTTPS tunnel. GPT source analysis requires `OPENAI_API_KEY`; image upload requires GPT vision.
+
+See [local development and model connections](docs/local-development.md) for the complete setup guide and [the world-sharing roadmap](docs/world-sharing-roadmap.md) for the planned private/public creator model.
 
 ## Scientific boundaries
 

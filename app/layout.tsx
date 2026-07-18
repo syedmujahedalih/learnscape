@@ -10,9 +10,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
   const host = requestHeaders.get("host") ?? "learnscape.local";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? "https";
-  const title = "Learnscape — Turn a page into a lesson.";
-  const description = "A focused STEM learning platform where students predict, run one useful experiment, explain the evidence, and transfer the idea.";
-  return { title, description, icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" }, openGraph: { title, description, images: [`${protocol}://${host}/og-pendulum.png`] }, twitter: { card: "summary_large_image", title, description, images: [`${protocol}://${host}/og-pendulum.png`] } };
+  const title = "Learnscape — Challenge your intuition.";
+  const description = "Learnscape turns STEM course material into interactive challenges: make a claim, run one clean test, and carry the rule into the next world.";
+  return { title, description, icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" }, openGraph: { title, description, images: [`${protocol}://${host}/og-challenge.png`] }, twitter: { card: "summary_large_image", title, description, images: [`${protocol}://${host}/og-challenge.png`] } };
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

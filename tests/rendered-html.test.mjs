@@ -19,13 +19,13 @@ test("server renders one coherent flagship Learnscape experience", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /<title>Learnscape — Turn a page into a lesson\.<\/title>/i);
+  assert.match(html, /<title>Learnscape — Challenge your intuition\.<\/title>/i);
   assert.match(html, /Turn a page/);
-  assert.match(html, /Try the pendulum lesson/);
+  assert.match(html, /Start the pendulum challenge/);
   assert.match(html, /Model settings/);
-  assert.match(html, /Start with their belief/);
-  assert.match(html, /Choose the useful test/);
-  assert.match(html, /Finish with transfer/);
+  assert.match(html, /Pick a side/);
+  assert.match(html, /Change one thing/);
+  assert.match(html, /Try a remix/);
   assert.match(html, /Four systems/);
   assert.doesNotMatch(html, /ONE CONCEPT\. ONE QUESTION\. ONE USEFUL EXPERIMENT\.|One validated flagship/i);
   assert.doesNotMatch(html, /Acid–Base Titration|Ohm’s Law Circuit Lab|Outliers &amp; Center/);
