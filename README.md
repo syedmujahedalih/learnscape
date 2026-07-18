@@ -1,6 +1,6 @@
 # Learnscape
 
-**Predict what happens. Discover why.** Learnscape turns course material into prediction-locked STEM worlds. Learners commit to a hypothesis, compare it with a learned forecast and validated evidence, explain the causal relationship, and pass a transfer check.
+**Predict what happens. Discover why.** Learnscape turns course material into interactive STEM systems where learners reveal how they think, run a useful experiment, explain the causal relationship, and transfer it to a new situation.
 
 ## Product wedge
 
@@ -13,6 +13,8 @@ Learnscape is not a generic course library or a points layer on top of video. It
 
 Gamification rewards evidence and conceptual progress: an insight score, lab-notebook trail, concept-passport stamp, and discoveries tied to meaningful experimental states. The Pendulum Observatory is the primary guided-demo path.
 
+The flagship mission also maintains a probabilistic picture of the learner's current misconception. It combines their prediction, confidence, reflection, explanation, and transfer response, then selects the experiment with the highest expected learning value. The recommendation is locked while the student runs it so the evidence trail stays coherent. An optional instructor lens makes the inference and recommendation inspectable.
+
 ## What is included
 
 - Pendulum Observatory — a polished Three.js world with live kinetic/potential energy, a validated RK4 solver, and an actual trained 818-parameter transition model forecasting motion in the browser.
@@ -20,7 +22,7 @@ Gamification rewards evidence and conceptual progress: an insight score, lab-not
 - Ohm’s Law circuit lab — a closed DC circuit model with adjustable voltage, resistance, and switch state.
 - Statistics preview — an experimental mean-versus-median and outlier interaction.
 - Source workflow — local Llama analysis, deterministic fixtures, source traceability, and intentional unsupported states.
-- Learning missions — prediction locks, confidence capture, correctness-gated transfer checks, insight scoring, and replayable concept passports.
+- Adaptive learning missions — prediction locks, confidence capture, misconception inference, information-guided experiment selection, transfer checks, insight scoring, and replayable concept passports.
 
 ## Run it
 
@@ -42,3 +44,5 @@ Run `python3 scripts/train_pendulum_model.py` to regenerate the deterministic Ty
 ## Build Week notes
 
 Learnscape is built with Codex. The optional GPT‑5.6 provider is deliberately isolated behind a server-side key; deterministic samples keep the judged demo reliable without network or API-credit dependence.
+
+The exact recording path, timed narration, pitch, technical proof points, and judge Q&A are in [`docs/demo-script.md`](docs/demo-script.md).

@@ -32,7 +32,14 @@ export default function PendulumWorld({ length, mass, angle, damping, setLength,
   const maxEnergy = Math.max(trajectory[0]?.total ?? 1, .001);
 
   useEffect(() => { runningRef.current = running; }, [running]);
-  useEffect(() => { elapsedRef.current = 0; setRunning(false); setReadout({ time: 0, actual: angle * Math.PI / 180, forecast: angle * Math.PI / 180, kinetic: 0, potential: maxEnergy, total: maxEnergy }); }, [angle, damping, length, mass, maxEnergy]);
+  useEffect(() => {
+    elapsedRef.current = 0;
+    const frame = requestAnimationFrame(() => {
+      setRunning(false);
+      setReadout({ time: 0, actual: angle * Math.PI / 180, forecast: angle * Math.PI / 180, kinetic: 0, potential: maxEnergy, total: maxEnergy });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [angle, damping, length, mass, maxEnergy]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -125,11 +132,11 @@ export default function PendulumWorld({ length, mass, angle, damping, setLength,
   return <div className="world-layout pendulum-world-layout"><section className="world-canvas pendulum-canvas">
     <div ref={mountRef} className="three-stage" aria-hidden="true" />
     <div className="observatory-heading"><span>WORLD 01 · DYNAMICS</span><b>The Pendulum Observatory</b></div>
-    <div className="model-status"><i/><div><small>LEARNED TRANSITION MODEL</small><b>{pendulumModelInfo.parameters.toLocaleString()} parameters · browser inference</b></div></div>
-    <div className="trajectory-key"><span><i className="student-line"/>validated motion</span><span><i className="model-line"/>model forecast</span></div>
+    <div className="model-status"><i/><div><small>LEARNSCAPE FORECAST</small><b>estimating what happens next</b></div></div>
+    <div className="trajectory-key"><span><i className="student-line"/>what happened</span><span><i className="model-line"/>Learnscape forecast</span></div>
     <div className="energy-dock"><div className="energy-title"><span>ENERGY EXCHANGE</span><b>{readout.total.toFixed(2)} J</b></div><div className="energy-row"><small>Potential</small><div><i style={{ width: `${potentialShare}%` }}/></div><b>{readout.potential.toFixed(2)} J</b></div><div className="energy-row kinetic"><small>Kinetic</small><div><i style={{ width: `${kineticShare}%` }}/></div><b>{readout.kinetic.toFixed(2)} J</b></div></div>
-    <div className="forecast-card"><small>FORECAST DRIFT · t+{readout.time.toFixed(1)}s</small><strong>{errorDegrees.toFixed(2)}°</strong><span>{errorDegrees < 2 ? "model and solver agree" : "uncertainty is accumulating"}</span></div>
-    <p className="screen-reader-readout">At {readout.time.toFixed(1)} seconds the validated angle is {(readout.actual * 180 / Math.PI).toFixed(1)} degrees and model forecast error is {errorDegrees.toFixed(2)} degrees.</p>
+    <div className="forecast-card"><small>FORECAST DIFFERENCE · t+{readout.time.toFixed(1)}s</small><strong>{errorDegrees.toFixed(2)}°</strong><span>{errorDegrees < 2 ? "forecast matched the experiment" : "forecasts get less certain farther ahead"}</span></div>
+    <p className="screen-reader-readout">At {readout.time.toFixed(1)} seconds the observed angle is {(readout.actual * 180 / Math.PI).toFixed(1)} degrees and the Learnscape forecast differs by {errorDegrees.toFixed(2)} degrees.</p>
   </section><aside className={`control-panel pendulum-controls ${locked ? "is-locked" : ""}`}>{locked && <div className="control-lock"><span>◎</span><b>Predict before you release</b><small>Your hypothesis unlocks the observatory controls.</small></div>}
     <p className="kicker">INITIAL CONDITIONS</p><h3>Shape the experiment</h3>
     <label>Release angle <b>{angle}°</b><input disabled={locked} aria-label="Release angle" type="range" min="10" max="75" step="5" value={angle} onChange={event => setAngle(Number(event.target.value))}/></label>
@@ -137,7 +144,7 @@ export default function PendulumWorld({ length, mass, angle, damping, setLength,
     <label>Bob mass <b>{mass.toFixed(1)} kg</b><input disabled={locked} aria-label="Bob mass" type="range" min=".5" max="3" step=".5" value={mass} onChange={event => setMass(Number(event.target.value))}/></label>
     <label>Damping <b>{damping === 0 ? "none" : damping.toFixed(2)}</b><input disabled={locked} aria-label="Pendulum damping" type="range" min="0" max=".12" step=".01" value={damping} onChange={event => setDamping(Number(event.target.value))}/></label>
     <div className="pendulum-actions"><button disabled={locked} className="release-button" onClick={release}>{running ? "Restart release" : "Release pendulum"} <span>▶</span></button><button disabled={locked} onClick={reset} aria-label="Reset pendulum">↺</button></div>
-    <div className="metric-grid pendulum-metrics"><div><small>IDEAL PERIOD</small><b>{approximatePeriod(length).toFixed(2)} s</b></div><div><small>PEAK ENERGY</small><b>{maxEnergy.toFixed(2)} J</b></div><div><small>GRAVITY</small><b>9.81 m/s²</b></div><div><small>REFERENCE</small><b>RK4 solver</b></div></div>
-    <p className="model-note">The amber body follows a validated numerical solver. The blue ghost is a learned one-step transition model rolled forward in time.</p>
+    <div className="metric-grid pendulum-metrics"><div><small>IDEAL PERIOD</small><b>{approximatePeriod(length).toFixed(2)} s</b></div><div><small>PEAK ENERGY</small><b>{maxEnergy.toFixed(2)} J</b></div><div><small>GRAVITY</small><b>9.81 m/s²</b></div><div><small>PHYSICS CHECK</small><b>active</b></div></div>
+    <details className="how-it-works"><summary>How does the forecast work?</summary><p>The amber pendulum is the physics reference. The blue ghost is a tiny predictive system trained on thousands of pendulum transitions and checked against that reference.</p><small>{pendulumModelInfo.parameters.toLocaleString()} learned parameters · runs in this browser</small></details>
   </aside></div>;
 }
