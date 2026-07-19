@@ -46,8 +46,12 @@ async function compressPage(file: File) {
 
 async function preparePdf(file: File) {
   const bytes = new Uint8Array(await file.arrayBuffer());
-  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const document = await pdfjs.getDocument({ data: bytes, disableWorker: true }).promise;
+  const [pdfjs, worker] = await Promise.all([
+    import("pdfjs-dist/legacy/build/pdf.mjs"),
+    import("pdfjs-dist/legacy/build/pdf.worker.min.mjs?url"),
+  ]);
+  pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
+  const document = await pdfjs.getDocument({ data: bytes }).promise;
   if (document.numPages > MAX_PDF_PAGES) throw new Error(`This PDF has ${document.numPages} pages. Choose up to ${MAX_PDF_PAGES} pages so one world stays focused.`);
   const data = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
