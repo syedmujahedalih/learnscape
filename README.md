@@ -18,10 +18,10 @@ The flagship mission also maintains a probabilistic picture of the learner's cur
 ## The focused prototype
 
 - Pendulum Observatory — the single visible flagship: a polished Three.js lesson with live kinetic/potential energy, a validated RK4 reference, and a trained 818-parameter transition forecast running in the browser.
-- Source workflow — a pendulum course page becomes a testable relationship, belief worth testing, and validated lesson. It supports local Llama analysis, OpenAI Responses API structured output, deterministic replay, and an honest unsupported state for other subjects.
+- Source workflow — a source becomes a testable relationship and an interactive world. Clear matches route into validated labs for pendulums, Ohm’s law, titration, and outliers; every other source receives an explicitly labelled concept studio rather than a fake simulation. It supports local Llama analysis, OpenAI Responses API structured output, deterministic replay, and short PDFs (up to six pages) through GPT.
 - Adaptive learning missions — prediction locks, confidence capture, misconception inference, information-guided experiment selection, transfer checks, insight scoring, and replayable concept passports.
 
-Earlier chemistry, circuits, and statistics engines remain in the repository as exploratory work, but they are intentionally absent from the submission experience. The prototype demonstrates one complete learning loop instead of presenting several inconsistent subject previews.
+The pendulum remains the most complete adaptive mission. The other routed labs are deliberately labelled by their current validation status, and sources outside those domains stay in the concept studio until a verified domain model is available.
 
 ## Run it
 
@@ -33,7 +33,7 @@ npm run dev
 
 Open the local URL printed by the terminal. To test a production build locally, run `npm run build` followed by `npm run start`.
 
-The app works without a model through the deterministic sample and explicitly labeled demo replay. For llama.cpp source mapping, start your server and set `LLAMA_BASE_URL` and `LLAMA_MODEL` in `.env.local`. A public Learnscape deployment cannot reach `127.0.0.1` on your Mac; run Learnscape locally, or make the model available through an authenticated HTTPS tunnel. GPT source analysis requires `OPENAI_API_KEY`; image upload requires GPT vision.
+The app works without a model through the deterministic sample and explicitly labeled demo replay. For llama.cpp source mapping, start your server and set `LLAMA_BASE_URL` and `LLAMA_MODEL` in `.env.local`. A public Learnscape deployment cannot reach `127.0.0.1` on your Mac; run Learnscape locally, or make the model available through an authenticated HTTPS tunnel. GPT source analysis requires `OPENAI_API_KEY`; images and PDFs use GPT because they need multimodal reading.
 
 See [local development and model connections](docs/local-development.md) for the complete setup guide and [the world-sharing roadmap](docs/world-sharing-roadmap.md) for the planned private/public creator model.
 

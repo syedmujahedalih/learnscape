@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { LearnscapeBlueprint } from "./schema";
 
 export const sourceAnalysisSchema = z.object({
-  templateId: z.enum(["pendulum_world", "acid_base_titration", "ohms_law_circuit", "statistics_explorer", "unsupported"]),
+  templateId: z.enum(["pendulum_world", "acid_base_titration", "ohms_law_circuit", "statistics_explorer", "concept_studio"]),
   title: z.string().min(1).max(80),
   summary: z.string().min(1).max(320),
   sourceExcerpt: z.string().min(1).max(500),
@@ -21,7 +21,7 @@ export const sourceAnalysisJsonSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
-    templateId: { type: "string", enum: ["pendulum_world", "acid_base_titration", "ohms_law_circuit", "statistics_explorer", "unsupported"] },
+    templateId: { type: "string", enum: ["pendulum_world", "acid_base_titration", "ohms_law_circuit", "statistics_explorer", "concept_studio"] },
     title: { type: "string" },
     summary: { type: "string" },
     sourceExcerpt: { type: "string" },
@@ -81,15 +81,15 @@ export function deterministicSourceAnalysis(text: string): SourceAnalysis {
     whyInteractive: "Dragging one point makes robustness visible instead of leaving it as a memorized rule.",
   };
   return {
-    templateId: "unsupported",
-    title: "New source blueprint",
-    summary: "The source can be mapped, but Learnscape does not yet have a validated world for this concept.",
+    templateId: "concept_studio",
+    title: "Concept Studio",
+    summary: "Explore the causal relationship grounded in this source before a subject-specific lab is available.",
     sourceExcerpt: text.slice(0, 500) || "No readable source excerpt was supplied.",
     causalQuestion: "Which relationship should a learner be able to predict and test?",
     primaryCause: "source variable",
     primaryEffect: "observable outcome",
-    misconception: "No validated misconception pattern is available yet.",
-    whyInteractive: "A new world should only be generated after its educational and scientific constraints are validated.",
+    misconception: "A source claim can be memorized without identifying what would count as evidence for it.",
+    whyInteractive: "A guided causal map turns the source into a prediction, an observation plan, and an explanation without pretending to be a quantitative lab.",
   };
 }
 

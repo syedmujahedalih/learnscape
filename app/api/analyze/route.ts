@@ -1,38 +1,40 @@
 import { NextResponse } from "next/server";
 import { blueprintSchema, type LearnscapeBlueprint } from "@/lib/blueprint/schema";
-import { pendulumBlueprint } from "@/lib/blueprint/fixtures";
+import { circuitBlueprint, pendulumBlueprint, statisticsBlueprint, titrationBlueprint } from "@/lib/blueprint/fixtures";
 import { deterministicSourceAnalysis, sourceAnalysisJsonSchema, sourceAnalysisSchema, type AnalysisMeta, type SourceAnalysis } from "@/lib/blueprint/source-analysis";
 
-const system = `You are Learnscape's pedagogical source mapper for a focused pendulum-motion pilot. Convert a supplied excerpt into a concise causal learning blueprint. Identify the relationship a student should predict, the most plausible misconception worth testing, and why interaction adds value. Choose pendulum_world only when the source clearly concerns pendulum motion; choose unsupported for every other topic. Do not invent claims beyond the supplied source. sourceExcerpt must be a faithful transcription or quotation from the source and no longer than 500 characters.`;
+const system = `You are Learnscape's pedagogical source mapper. Convert the supplied course material into one concise, source-grounded causal learning experience. Identify the relationship a student should predict, the most plausible misconception worth testing, and why interaction adds value. Route only clear matches to these validated labs: pendulum_world for pendulum motion; ohms_law_circuit for Ohm's law, voltage, current, or resistance; acid_base_titration for acid-base titration; statistics_explorer for mean, median, or outliers. Route every other topic to concept_studio. concept_studio is an interactive causal map, not a numerical simulation; never claim it is experimentally validated. Do not invent claims beyond the supplied source. sourceExcerpt must be a faithful transcription or quotation from the source and no longer than 500 characters.`;
 
-function unsupportedBlueprint() {
+function conceptStudioBlueprint(analysis: SourceAnalysis): LearnscapeBlueprint {
   return {
     ...pendulumBlueprint,
-    id: "unsupported-source",
-    title: "This lesson is not available yet",
+    id: "concept-studio",
+    title: analysis.title,
     domain: "other" as const,
-    concepts: [{ id: "source-concept", name: "Source concept", explanation: "The source was read, but this pilot only includes a validated pendulum lesson.", importance: "primary" as const }],
-    variables: [], equations: [], relationships: [],
-    learningObjectives: ["Identify the testable relationship in the supplied concept."],
-    commonMisconceptions: [],
-    recommendedExperience: { templateId: "unsupported" as const, representation: "unsupported" as const, rationale: "Learnscape currently ships one deeply validated pendulum lesson rather than several inconsistent previews." },
-    assumptions: ["Only the Pendulum Observatory has been validated for this prototype."],
-    limitations: ["Additional subjects require their own domain model, experiment design, and validation."],
-    validationStatus: "unsupported" as const,
+    concepts: [{ id: "source-concept", name: analysis.title, explanation: analysis.summary, importance: "primary" as const }],
+    variables: [
+      { id: "cause", name: analysis.primaryCause, description: "The source-grounded input or condition to vary.", manipulable: true },
+      { id: "effect", name: analysis.primaryEffect, description: "The outcome a learner should observe.", manipulable: false },
+    ],
+    equations: [],
+    relationships: [{ cause: "cause", effect: "effect", relationship: "depends_on", explanation: analysis.causalQuestion }],
+    learningObjectives: [`Use evidence to explain how ${analysis.primaryCause.toLowerCase()} relates to ${analysis.primaryEffect.toLowerCase()}.`],
+    commonMisconceptions: [analysis.misconception],
+    recommendedExperience: { templateId: "concept_studio" as const, representation: "concept_studio" as const, rationale: analysis.whyInteractive },
+    assumptions: ["This is a source-grounded thinking activity, not a scientific simulation."],
+    limitations: ["A subject-specific lab is needed before Learnscape can make quantitative claims or predict numerical outcomes."],
+    validationStatus: "experimental_preview" as const,
   };
-}
-
-function fallback(text: string) {
-  const templateId = deterministicSourceAnalysis(text).templateId;
-  if (templateId === "pendulum_world") return pendulumBlueprint;
-  return unsupportedBlueprint();
 }
 
 function cleanJson(text: string) { return JSON.parse(text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "")); }
 
-function templateFor(templateId: SourceAnalysis["templateId"], text: string) {
-  if (templateId === "pendulum_world") return pendulumBlueprint;
-  return fallback(text);
+function templateFor(analysis: SourceAnalysis): LearnscapeBlueprint {
+  if (analysis.templateId === "pendulum_world") return pendulumBlueprint;
+  if (analysis.templateId === "ohms_law_circuit") return circuitBlueprint;
+  if (analysis.templateId === "acid_base_titration") return titrationBlueprint;
+  if (analysis.templateId === "statistics_explorer") return statisticsBlueprint;
+  return conceptStudioBlueprint(analysis);
 }
 
 function outputText(body: unknown) {
@@ -42,13 +44,14 @@ function outputText(body: unknown) {
   return response.output?.flatMap(item => item.content ?? []).find(item => item.type === "output_text")?.text ?? "";
 }
 
-async function analyzeWithGpt(text: string, image: string | undefined, apiKey?: string) {
+async function analyzeWithGpt(text: string, image: string | undefined, pdf: string | undefined, apiKey?: string) {
   const model = process.env.OPENAI_MODEL ?? "gpt-5.6-terra";
   if (!apiKey) throw new Error("No OpenAI API key is configured. Add one in Model settings or configure the site demo key.");
-  const content: Array<{ type: "input_text"; text: string } | { type: "input_image"; image_url: string; detail: "low" }> = [
-    { type: "input_text", text: text.trim() ? `Analyze this confirmed source text:\n\n${text.slice(0, 9000)}` : "Read the supplied textbook page. Extract the exact passage relevant to pendulum motion, then create the structured learning blueprint." },
+  const content: Array<{ type: "input_text"; text: string } | { type: "input_image"; image_url: string; detail: "high" } | { type: "input_file"; file_data: string; filename: string }> = [
+    { type: "input_text", text: text.trim() ? `Analyze this confirmed source text:\n\n${text.slice(0, 9000)}` : "Read the supplied course material. Extract the exact passage relevant to the core concept, then create the structured learning blueprint." },
   ];
-  if (image) content.push({ type: "input_image", image_url: image, detail: "low" });
+  if (image) content.push({ type: "input_image", image_url: image, detail: "high" });
+  if (pdf) content.push({ type: "input_file", file_data: pdf.replace(/^data:application\/pdf;base64,/i, ""), filename: "learnscape-source.pdf" });
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
@@ -89,26 +92,30 @@ async function analyzeWithLlama(text: string, baseUrl?: string, configuredModel?
 }
 
 export async function POST(request: Request) {
-  const { text = "", image, provider = "llama" } = await request.json() as { text?: string; image?: string; provider?: "llama" | "gpt" };
+  const { text = "", image, pdf, provider = "llama" } = await request.json() as { text?: string; image?: string; pdf?: string; provider?: "llama" | "gpt" };
   const openaiApiKey = request.headers.get("x-learnscape-openai-key")?.trim() || process.env.OPENAI_API_KEY;
   const llamaBaseUrl = request.headers.get("x-learnscape-llama-base-url")?.trim();
   const llamaModel = request.headers.get("x-learnscape-llama-model")?.trim();
   const llamaApiKey = request.headers.get("x-learnscape-llama-key")?.trim();
-  if (!text.trim() && !image) return NextResponse.json({ error: "Choose a textbook page or paste an excerpt before creating the lesson." }, { status: 400 });
+  if (!text.trim() && !image && !pdf) return NextResponse.json({ error: "Choose course material or paste an excerpt before creating the world." }, { status: 400 });
+  if (image && pdf) return NextResponse.json({ error: "Choose one image or one PDF for each world." }, { status: 400 });
   if (image && !/^data:image\/(?:png|jpeg|webp);base64,/i.test(image)) return NextResponse.json({ error: "Upload a PNG, JPEG, or WebP textbook page." }, { status: 400 });
   if (image && image.length > 6_000_000) return NextResponse.json({ error: "That page is too large. Choose an image under 4 MB." }, { status: 413 });
+  if (pdf && !/^data:application\/pdf;base64,/i.test(pdf)) return NextResponse.json({ error: "Upload a PDF document." }, { status: 400 });
+  if (pdf && pdf.length > 17_000_000) return NextResponse.json({ error: "That PDF is too large. Keep it under 12 MB." }, { status: 413 });
   if (image && provider !== "gpt") return NextResponse.json({ error: "Page images require GPT vision. Pasted text can still use your local model." }, { status: 400 });
+  if (pdf && provider !== "gpt") return NextResponse.json({ error: "PDFs use GPT so Learnscape can read all pages together. Pasted text can still use your local model." }, { status: 400 });
   try {
-    const result = provider === "gpt" ? await analyzeWithGpt(text, image, openaiApiKey) : await analyzeWithLlama(text, llamaBaseUrl, llamaModel, llamaApiKey);
-    const selected = templateFor(result.analysis.templateId, text);
+    const result = provider === "gpt" ? await analyzeWithGpt(text, image, pdf, openaiApiKey) : await analyzeWithLlama(text, llamaBaseUrl, llamaModel, llamaApiKey);
+    const selected = templateFor(result.analysis);
     const extractedText = text.trim() || result.analysis.sourceExcerpt;
-    const blueprint: LearnscapeBlueprint = { ...selected, id: `analysis-${Date.now()}`, title: result.analysis.title, source: { sourceType: image ? "image" : "manual", extractedText, summary: result.analysis.summary, relevantExcerpts: [{ text: result.analysis.sourceExcerpt, conceptIds: selected.concepts.map(c => c.id) }] } };
+    const blueprint: LearnscapeBlueprint = { ...selected, id: `analysis-${Date.now()}`, title: result.analysis.title, source: { sourceType: pdf ? "pdf" : image ? "image" : "manual", extractedText, summary: result.analysis.summary, relevantExcerpts: [{ text: result.analysis.sourceExcerpt, conceptIds: selected.concepts.map(c => c.id) }] } };
     const analysis: AnalysisMeta = { ...result.analysis, provider, live: true, model: result.model };
     return NextResponse.json({ blueprint: blueprintSchema.parse(blueprint), analysis, usage: "usage" in result ? result.usage : undefined });
   } catch (error) {
-    if (image) return NextResponse.json({ error: error instanceof Error ? error.message.replace("; showing the deterministic demo replay.", ".") : "The page could not be read." }, { status: 503 });
-    const selected = fallback(text);
+    if (image || pdf) return NextResponse.json({ error: error instanceof Error ? error.message.replace("; showing the deterministic demo replay.", ".") : "The source could not be read." }, { status: 503 });
     const mapped = deterministicSourceAnalysis(text);
+    const selected = templateFor(mapped);
     const blueprint = { ...selected, id: `fallback-${Date.now()}`, title: mapped.title, source: { sourceType: "manual" as const, extractedText: text, summary: mapped.summary, relevantExcerpts: [{ text: text.slice(0, 280), conceptIds: selected.concepts.map(c => c.id) }] } };
     const analysis: AnalysisMeta = { ...mapped, provider: "deterministic", live: false, model: "Learnscape ruleset v1" };
     return NextResponse.json({ blueprint: blueprintSchema.parse(blueprint), analysis, warning: error instanceof Error ? error.message : "Analysis fallback used" });
