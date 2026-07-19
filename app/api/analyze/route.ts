@@ -51,7 +51,7 @@ async function analyzeWithGpt(text: string, image: string | undefined, pdf: stri
     { type: "input_text", text: text.trim() ? `Analyze this confirmed source text:\n\n${text.slice(0, 9000)}` : "Read the supplied course material. Extract the exact passage relevant to the core concept, then create the structured learning blueprint." },
   ];
   if (image) content.push({ type: "input_image", image_url: image, detail: "high" });
-  if (pdf) content.push({ type: "input_file", file_data: pdf.replace(/^data:application\/pdf;base64,/i, ""), filename: "learnscape-source.pdf" });
+  if (pdf) content.push({ type: "input_file", file_data: pdf, filename: "learnscape-source.pdf" });
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
@@ -64,7 +64,11 @@ async function analyzeWithGpt(text: string, image: string | undefined, pdf: stri
       text: { format: { type: "json_schema", name: "learnscape_source_analysis", strict: true, schema: sourceAnalysisJsonSchema } },
     }),
   });
-  if (!response.ok) throw new Error(`GPT returned ${response.status}; showing the deterministic demo replay.`);
+  if (!response.ok) {
+    const failure = await response.json().catch(() => null) as { error?: { message?: unknown } } | null;
+    const detail = typeof failure?.error?.message === "string" ? failure.error.message : "The API did not provide a reason.";
+    throw new Error(`GPT returned ${response.status}: ${detail}`);
+  }
   const body = await response.json() as { output_text?: string; output?: Array<{ content?: Array<{ type?: string; text?: string }> }>; usage?: { input_tokens?: number; output_tokens?: number; total_tokens?: number } };
   const analysis = sourceAnalysisSchema.parse(cleanJson(outputText(body)));
   return { analysis, model, usage: body.usage };
