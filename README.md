@@ -1,18 +1,18 @@
 # P99
 
-**The flight simulator for inference engineers.** P99 teaches LLM serving through realistic production incidents. Learners predict a failure mode, tune the serving stack, replay a workload, and diagnose the result.
+**The flight simulator for inference engineers.** P99 teaches LLM serving through production incidents. Learners predict a failure mode, tune the stack, roll the system forward with a learned next-state model, and validate the forecast against either a reference trace or an ephemeral GPU benchmark.
+
+## What is real today
+
+- A 19→24→6 multilayer perceptron recursively predicts queue depth, active requests, VRAM, utilization, throughput, and p95 state.
+- The checked-in weights are reproducibly trained from 10,800 bootstrap transitions so the demo works without a GPU.
+- A deterministic reference engine independently grades configurations offline.
+- An optional Modal runner provisions a T4, L4, or A10G; launches llama.cpp with Qwen2.5-7B; generates the fixed workload; and records llama.cpp plus `nvidia-smi` telemetry.
+- The UI labels the provenance of every outcome. Bootstrap forecasts are never presented as measured production data.
 
 ## Flagship incident
 
-The launch-day latency spiral puts an 8B model on a 24 GB A10G under a sudden traffic spike. The learner must satisfy five simultaneous constraints:
-
-- p95 end-to-end latency ≤ 4 seconds
-- throughput ≥ 230 tokens/second
-- VRAM usage below 24 GB
-- quality ≥ 95%
-- cost ≤ $1.50 per million output tokens
-
-They can intervene through weight precision, continuous batching, KV-cache allocation, concurrency, prefix caching, and speculative decoding. A deterministic system model forecasts the outcome before a trace engine grades the same configuration.
+The launch-day latency spiral puts an 8B-class model under a sudden traffic spike. The learner must satisfy p95 latency, throughput, VRAM, quality, and cost constraints by changing precision, continuous batching, KV-cache allocation, concurrency, prefix caching, and speculative decoding.
 
 ## Run locally
 
@@ -21,10 +21,14 @@ npm install
 npm run dev
 ```
 
-Open the local URL printed by the development server. No model, API key, or GPU is required for the current trace-driven incident.
+No API key, model download, or GPU is required for the learned forecast and reference-trace path. To enable real ephemeral GPU runs, follow [docs/cloud-benchmarks.md](docs/cloud-benchmarks.md).
 
-## Scientific boundary
+## Retrain the world model
 
-The current runtime is an educational performance model calibrated to internally consistent workload assumptions. It is not a benchmark of an actual A10G and must not be used for capacity planning. The next technical milestone is collecting traces from llama.cpp and vLLM, fitting a hardware-conditioned surrogate, and executing selected configurations through a local bridge.
+```bash
+npm run world-model:train
+```
 
-See [`docs/architecture.md`](docs/architecture.md), [`docs/demo-script.md`](docs/demo-script.md), and [`docs/limitations.md`](docs/limitations.md).
+The trainer consumes JSONL traces from `data/traces/` when at least 200 transitions are available; otherwise it regenerates the labeled bootstrap corpus. Generated weights live in `lib/inference/world-model-weights.ts`.
+
+Read [the architecture](docs/architecture.md), [demo script](docs/demo-script.md), and [limitations](docs/limitations.md).

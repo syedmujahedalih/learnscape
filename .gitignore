@@ -40,6 +40,8 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+__pycache__/
+*.pyc
 
 # Remotion demo video build artifacts
 /video/node_modules/

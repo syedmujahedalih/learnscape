@@ -101,17 +101,3 @@ export function simulateInference(config: InferenceConfig): InferenceMetrics {
     bottleneck,
   };
 }
-
-export function modelForecast(config: InferenceConfig): InferenceMetrics {
-  const observed = simulateInference(config);
-  if (observed.oom) return observed;
-  return {
-    ...observed,
-    ttftMs: Math.round(observed.ttftMs * .96),
-    p95Ms: Math.round(observed.p95Ms * .97),
-    throughput: Math.round(observed.throughput * 1.03),
-    vramGb: Number((observed.vramGb * .99).toFixed(1)),
-    queueDepth: Math.max(0, Math.round(observed.queueDepth * .94)),
-    costPerMillion: Number((observed.costPerMillion * .98).toFixed(2)),
-  };
-}

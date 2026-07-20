@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { initialConfig, modelForecast, simulateInference } from "../lib/inference/engine.ts";
+import { initialConfig, simulateInference } from "../lib/inference/engine.ts";
+import { forecastWorld, worldModelInfo } from "../lib/inference/world-model.ts";
 
 test("the launch configuration reproduces the latency incident", () => {
   const metrics = simulateInference(initialConfig);
@@ -28,11 +29,19 @@ test("an oversized memory plan fails before execution", () => {
   assert.match(metrics.bottleneck, /VRAM/i);
 });
 
-test("the system forecast remains close but not identical to the trace", () => {
-  const config = { precision: "INT8", batchSize: 16, cacheGb: 10, concurrency: 12, prefixCache: true, speculative: true };
-  const forecast = modelForecast(config);
-  const observed = simulateInference(config);
-  assert.notEqual(forecast.throughput, observed.throughput);
-  assert.ok(Math.abs(forecast.throughput - observed.throughput) / observed.throughput < .05);
-  assert.ok(Math.abs(forecast.p95Ms - observed.p95Ms) / observed.p95Ms < .05);
+test("the learned next-state model rolls a system state forward", () => {
+  const rollout = forecastWorld(initialConfig);
+  assert.equal(rollout.trajectory.length, 13);
+  assert.ok(rollout.trajectory.at(-1).queueDepth > 100);
+  assert.equal(rollout.metrics.passed, false);
+  assert.ok(rollout.metrics.p95Ms > 10_000);
+  assert.equal(worldModelInfo.parameters, 630);
+  assert.equal(worldModelInfo.architecture, "19→24→6 next-state MLP");
+});
+
+test("the learned rollout recognizes the successful intervention", () => {
+  const rollout = forecastWorld({ precision: "INT4", batchSize: 8, cacheGb: 10, concurrency: 12, prefixCache: true, speculative: true });
+  assert.equal(rollout.metrics.passed, true);
+  assert.ok(rollout.metrics.throughput >= 230);
+  assert.ok(rollout.metrics.p95Ms <= 4000);
 });

@@ -1,20 +1,44 @@
 # P99 architecture
 
-P99 separates the learner-facing system model from the authoritative trace replay.
+P99 has three deliberately separate layers.
 
-1. A fixed workload describes arrival rate, prompt and output length, prefix reuse, model size, and accelerator memory.
-2. The learner configures precision, batching, KV-cache budget, concurrency, prefix caching, and speculative decoding.
-3. The system model forecasts TTFT, p95 latency, throughput, VRAM, queue depth, quality, cost, utilization, and power.
-4. The learner commits to a predicted failure mode.
-5. The trace engine evaluates the same configuration and returns a deliberately small forecast error.
-6. Five simultaneous SLO constraints produce the mission score and bottleneck diagnosis.
+## 1. Learned world model
 
-`lib/inference/engine.ts` contains both models so the prototype is deterministic, replayable, browser-native, and safe to demo without a GPU. This is an inference-systems simulator, not currently a learned world model.
+`lib/inference/world-model.ts` recursively applies a generated 19-input, 24-hidden-unit, 6-output MLP. Its state is:
 
-## Next technical milestone
+`queue depth + active requests + VRAM + GPU utilization + throughput + p95 latency`
 
-Replace the analytic forecast with a learned surrogate trained on benchmark traces shaped as:
+Each step is conditioned on the previous state, serving configuration, workload, and rollout progress. Because the prediction becomes the next input, this is a small next-state world model rather than a single outcome regression. An explicit SLO head derives end-to-end tail latency and the mission score from the predicted system state.
 
-`hardware + model + workload + serving configuration → latency + throughput + memory + failures`
+The generated weights and training metadata are in `lib/inference/world-model-weights.ts`. `scripts/train_inference_world_model.mjs` can fit the model from normalized trace transitions.
 
-A local agent can connect llama.cpp or vLLM to the deployed UI through an outbound authenticated channel. The trace executor remains authoritative; the learned surrogate must expose prediction error rather than grade itself.
+## 2. Independent validation
+
+The default reference path calls the deterministic educational engine in `lib/inference/engine.ts`. It does not share learned weights with the world model. This preserves a fast, repeatable demo and makes forecast error visible.
+
+When configured, `app/api/benchmark/route.ts` instead creates and polls a real GPU job. The API key remains server-side.
+
+## 3. Ephemeral GPU trace runner
+
+`cloud/modal_benchmark.py` exposes an authenticated, allow-listed job API. Each job:
+
+1. provisions one T4, L4, or A10G with a ten-minute hard timeout;
+2. starts llama.cpp with an official Qwen2.5-7B GGUF quantization;
+3. replays the fixed 2.4 request/second workload;
+4. samples llama.cpp Prometheus metrics and `nvidia-smi` telemetry;
+5. saves a versionable trace and returns its observed summary;
+6. terminates with the function container.
+
+Arbitrary repositories, shell arguments, durations, and GPU types are not accepted from the browser. This bounds both attack surface and spend.
+
+```mermaid
+flowchart LR
+  UI["P99 incident UI"] --> WM["Learned next-state rollout"]
+  UI --> API["Server-only benchmark proxy"]
+  API --> MODAL["Ephemeral Modal GPU"]
+  MODAL --> LLAMA["llama.cpp + Qwen 7B"]
+  LLAMA --> TRACE["Measured state trace"]
+  TRACE --> UI
+  TRACE --> TRAIN["Offline trainer"]
+  TRAIN --> WM
+```
