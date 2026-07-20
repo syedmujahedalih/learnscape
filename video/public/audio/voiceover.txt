@@ -1,17 +1,25 @@
-Textbooks can tell students what happens. But a student can memorize the formula and still keep the wrong model of what causes it.
+Inference engineering is usually learned in production—when latency is already burning and every experiment is expensive.
 
-Learnscape turns course material into an interactive world. It identifies the relationship worth understanding, a misconception worth testing, and the experience that can create evidence.
+P99 is a flight simulator for inference engineers.
 
-Before touching the controls, the learner makes a prediction and states their confidence. A wrong answer is not failure. It is useful evidence about how they currently think.
+Instead of another architecture lecture, it drops you into a launch-day incident. Traffic jumped six times. An eight-billion-parameter service is missing its latency objective, the queue is compounding, and revenue is at risk.
 
-Learnscape uses that evidence to prepare one clean experiment. Here, it changes only the bob's mass while keeping length and release angle fixed.
+You have to protect five constraints at once: tail latency, throughput, memory, quality, and cost.
 
-The student releases the pendulum. The validated physics reference and a learned next-state forecast make the hidden dynamics visible.
+First, commit to a failure mode. Then change the serving stack: precision, continuous batching, K-V cache, concurrency, prefix caching, and speculative decoding.
 
-Now the original belief meets the observation. Both bobs have the same ideal period. Mass changes energy, not swing time.
+P99 does not reveal a canned answer. A compact learned world model recursively rolls the system state forward—queue depth, active requests, V-RAM, utilization, throughput, and P-ninety-five latency.
 
-The learner must explain the result and transfer the rule to a new situation. Progress is earned through transfer, not clicking through content.
+Here, the baseline collapses. Token demand outruns decode capacity and the queue explodes.
 
-Learnscape combines a domain model, interactive world, learner model, and adaptive tutor. Codex and GPT-5.6 Terra helped turn that architecture into a tested prototype.
+Now I quantize to INT four, batch continuously, reuse the shared prefix, and enable speculative decoding. The model forecasts a stable system.
 
-Learnscape. Predict. Experiment. Understand why. Causal understanding is the product.
+Then an independent reference trace grades that forecast. P-ninety-five falls below four seconds, throughput clears demand, memory stays safe, and the incident is contained.
+
+The checked-in network has six hundred and thirty parameters and was trained on ten thousand eight hundred bootstrap transitions. P99 labels that provenance explicitly. It is a real learned next-state model, not a fake production benchmark.
+
+The next layer is already implemented: an authenticated Modal runner can launch a short-lived T-four, L-four, or A-ten G, execute llama dot C-P-P, and capture real server and NVIDIA telemetry for retraining.
+
+Codex with GPT five point six helped me pressure-test the original education idea, pivot to inference engineering, design the product, implement the learned rollout and cloud trace architecture, write the tests, and deploy the final experience.
+
+P99 turns systems intuition into something you can practice: predict, intervene, validate, and understand why.

@@ -1,11 +1,11 @@
 {
-  "name": "learnscape-demo-video",
+  "name": "p99-demo-video",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "studio": "remotion studio src/index.ts",
-    "render": "remotion render src/index.ts LearnscapeDemo out/learnscape-demo.mp4 --codec=h264 --crf=16 --pixel-format=yuv420p"
+    "render": "remotion render src/index.ts P99Demo out/p99-demo.mp4 --codec=h264 --crf=16 --pixel-format=yuv420p"
   },
   "dependencies": {
     "@remotion/cli": "4.0.494",

@@ -1,12 +1,12 @@
 import React from "react";
 import { Composition } from "remotion";
-import { LearnscapeDemo } from "./LearnscapeDemo";
+import { P99Demo } from "./P99Demo";
 
 export const VideoRoot: React.FC = () => (
   <Composition
-    id="LearnscapeDemo"
-    component={LearnscapeDemo}
-    durationInFrames={2700}
+    id="P99Demo"
+    component={P99Demo}
+    durationInFrames={4410}
     fps={30}
     width={1920}
     height={1080}
