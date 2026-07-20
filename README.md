@@ -2,7 +2,7 @@
 
 **Learn inference engineering by running it.** P99 is an interactive playground for understanding LLM serving systems. Learners build the fundamentals through focused experiments, explore the serving stack freely, and graduate to production incidents powered by a learned next-state model.
 
-[Try the deployed incident lab](https://learnscape-education.syedmujahedalih.chatgpt.site)
+[Launch the P99 playground →](https://learnscape-education.syedmujahedalih.chatgpt.site)
 
 P99 is an OpenAI Build Week Education-track project built for students and engineers learning to operate production AI infrastructure. Instead of separating quantization, batching, caching, and decoding into passive lessons, it makes their interaction the curriculum.
 
