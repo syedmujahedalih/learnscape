@@ -193,9 +193,9 @@ const WorldModelScene: React.FC<{ duration: number }> = ({ duration }) => {
   return (
     <AbsoluteFill style={{ background: `radial-gradient(circle at 50% 50%, #123538, transparent 38%), ${bg}`, color: text, opacity: fade(frame, duration), overflow: "hidden" }}>
       <Grid />
-      <Chrome label="HOW IT WORKS" status="LEARNED DYNAMICS" />
+      <Chrome label="HOW IT WORKS" status="LEARNED SURROGATE" />
       <div style={{ position: "absolute", left: 110, right: 110, top: 160, textAlign: "center", opacity: enter }}>
-        <div style={{ color: cyan, font: "800 12px ui-monospace, monospace", letterSpacing: 3.6 }}>WORLD MODEL ≠ ONE-SHOT SCORE</div>
+        <div style={{ color: cyan, font: "800 12px ui-monospace, monospace", letterSpacing: 3.6 }}>LEARNED DYNAMICS ≠ ONE-SHOT SCORE</div>
         <div style={{ marginTop: 18, font: "850 59px/.98 Inter, Arial", letterSpacing: -3.5 }}>The prediction becomes the next state.</div>
       </div>
       <div style={{ position: "absolute", left: 125, right: 125, top: 385, display: "grid", gridTemplateColumns: "1fr 120px 1fr 120px 1fr", alignItems: "center", opacity: enter }}>
@@ -310,20 +310,71 @@ const Closing: React.FC<{ duration: number }> = ({ duration }) => {
   );
 };
 
+type Caption = { from: number; duration: number; text: string; hot: string[]; accent?: string };
+
+const captions: Caption[] = [
+  { from: 22, duration: 82, text: "LEARN INFERENCE BEFORE PRODUCTION BURNS", hot: ["PRODUCTION", "BURNS"], accent: red },
+  { from: 106, duration: 74, text: "P99 IS A FLIGHT SIMULATOR", hot: ["P99", "SIMULATOR"] },
+  { from: 190, duration: 94, text: "TRAFFIC JUST JUMPED 6×", hot: ["6×"], accent: red },
+  { from: 286, duration: 104, text: "REQUESTS PILE UP. THE GPU SATURATES.", hot: ["PILE", "SATURATES."], accent: red },
+  { from: 394, duration: 108, text: "THE LATENCY TARGET IS GONE", hot: ["GONE"], accent: red },
+  { from: 514, duration: 118, text: "PROTECT FIVE SLOs AT ONCE", hot: ["FIVE", "SLOs"] , accent: amber},
+  { from: 636, duration: 188, text: "PREDICT FIRST. THEN INTERVENE.", hot: ["PREDICT", "INTERVENE."] },
+  { from: 850, duration: 112, text: "THIS IS THE TECHNICAL CORE", hot: ["TECHNICAL", "CORE"], accent: cyan },
+  { from: 966, duration: 132, text: "CURRENT STATE → NEXT STATE", hot: ["NEXT", "STATE"], accent: cyan },
+  { from: 1102, duration: 142, text: "FEED IT BACK IN. ROLL FORWARD AGAIN.", hot: ["ROLL", "FORWARD"] },
+  { from: 1272, duration: 112, text: "DEMAND > DECODE CAPACITY", hot: ["DEMAND", "CAPACITY"], accent: red },
+  { from: 1388, duration: 128, text: "THE QUEUE KEEPS GROWING", hot: ["KEEPS", "GROWING"], accent: red },
+  { from: 1542, duration: 102, text: "SWITCH TO 4-BIT WEIGHTS", hot: ["4-BIT"], accent: cyan },
+  { from: 1648, duration: 106, text: "BATCH + REUSE THE PREFIX", hot: ["BATCH", "PREFIX"], accent: cyan },
+  { from: 1758, duration: 116, text: "ENABLE SPECULATIVE DECODING", hot: ["SPECULATIVE"], accent: cyan },
+  { from: 1902, duration: 138, text: "THE MODEL PREDICTS: QUEUE CLEARS", hot: ["QUEUE", "CLEARS"] },
+  { from: 2044, duration: 158, text: "BUT IT DOESN'T GRADE ITSELF", hot: ["DOESN'T", "ITSELF"], accent: amber },
+  { from: 2228, duration: 112, text: "A REFERENCE TRACE CHECKS IT", hot: ["REFERENCE", "TRACE"] },
+  { from: 2344, duration: 158, text: "100 / 100 · INCIDENT CONTAINED", hot: ["100", "CONTAINED"] },
+  { from: 2530, duration: 112, text: "IS IT A REAL WORLD MODEL?", hot: ["REAL", "WORLD", "MODEL?"], accent: amber },
+  { from: 2646, duration: 156, text: "REAL LEARNED SURROGATE. BOOTSTRAP DATA.", hot: ["SURROGATE.", "BOOTSTRAP"], accent: amber },
+  { from: 2828, duration: 112, text: "NEXT: MEASURED GPU TRACES", hot: ["MEASURED", "GPU", "TRACES"], accent: cyan },
+  { from: 2944, duration: 154, text: "MODAL → LLAMA.CPP → TELEMETRY", hot: ["TELEMETRY"], accent: cyan },
+  { from: 3120, duration: 168, text: "BREAK THE STACK. LEARN WHY.", hot: ["LEARN", "WHY."] },
+];
+
+const KineticCaption: React.FC<Omit<Caption, "from">> = ({ duration, text: caption, hot, accent = acid }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const words = caption.split(" ");
+  const opacity = interpolate(frame, [0, 7, duration - 8, duration], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  return (
+    <div style={{ position: "absolute", zIndex: 80, left: 0, right: 0, top: 105, display: "flex", justifyContent: "center", opacity, pointerEvents: "none" }}>
+      <div style={{ maxWidth: 1530, padding: "14px 24px 16px", display: "flex", flexWrap: "wrap", justifyContent: "center", columnGap: 16, rowGap: 4, border: "1px solid rgba(255,255,255,.14)", borderRadius: 12, background: "rgba(3,6,10,.82)", boxShadow: "0 18px 60px rgba(0,0,0,.48)", backdropFilter: "blur(14px)" }}>
+        {words.map((word, index) => {
+          const pop = spring({ frame: frame - index * 1.6, fps, config: { damping: 15, stiffness: 190, mass: .65 } });
+          const normalized = word.replace(/[,:]/g, "");
+          const highlighted = hot.includes(word) || hot.includes(normalized);
+          return <span key={`${word}-${index}`} style={{ display: "inline-block", color: highlighted ? accent : text, font: "950 38px/.98 Inter, Arial", letterSpacing: -1.4, textShadow: highlighted ? `0 0 24px ${accent}55` : "0 3px 18px rgba(0,0,0,.8)", transform: `translateY(${(1-pop)*18}px) scale(${.82 + pop*.18})`, opacity: pop }}>{word}</span>;
+        })}
+      </div>
+    </div>
+  );
+};
+
+const CaptionTrack: React.FC = () => <>{captions.map(caption => <Sequence key={caption.from} from={caption.from} durationInFrames={caption.duration}><KineticCaption {...caption}/></Sequence>)}</>;
+
 export const P99Demo: React.FC = () => (
   <AbsoluteFill style={{ background: bg }}>
     <Audio src={staticFile("audio/p99-voiceover.m4a")} volume={1} />
     <Audio src={staticFile("audio/p99-ambient.m4a")} volume={0.7} />
-    <Sequence from={0} durationInFrames={270}><Opening duration={270}/></Sequence>
-    <Sequence from={270} durationInFrames={510}><ProductScene duration={510} image="01-home.png" step="THE PROBLEM" title="Production is a brutal classroom." copy="Inference engineers need causal intuition before a real launch turns into an expensive lesson." accent={red} focus={{x:1385,y:330,label:"P95 · 14.82s"}}/></Sequence>
-    <Sequence from={780} durationInFrames={510}><ProductScene duration={510} image="02-incident.png" step="MISSION 01" title="Five constraints. One intervention." copy="Latency, throughput, VRAM, quality, and cost move together. The learner must protect all five." accent={amber} focus={{x:195,y:410,label:"THE SLO ENVELOPE"}}/></Sequence>
-    <Sequence from={1290} durationInFrames={570}><WorldModelScene duration={570}/></Sequence>
-    <Sequence from={1860} durationInFrames={390}><ProductScene duration={390} image="03-baseline-rollout.png" step="PREDICT" title="The baseline collapses." copy="Incoming token demand outruns decode capacity. Queue growth becomes the lesson—not a tooltip." accent={red} focus={{x:810,y:260,label:"389 QUEUED"}}/></Sequence>
-    <Sequence from={2250} durationInFrames={510}><ProductScene duration={510} image="04-intervention.png" step="INTERVENE" title="Change the serving stack." copy="INT4, continuous batching, prefix reuse, and speculative decoding reshape the system dynamics." accent={cyan} focus={{x:1600,y:455,label:"TUNE THE STACK"}}/></Sequence>
-    <Sequence from={2760} durationInFrames={450}><ProductScene duration={450} image="05-success-forecast.png" step="ROLL OUT" title="Forecast before validation." copy="The learned model predicts a stable state. Its answer is visible—but it does not grade itself." accent={acid} focus={{x:840,y:810,label:"WORLD MODEL"}}/></Sequence>
-    <Sequence from={3210} durationInFrames={390}><ProductScene duration={390} image="07-contained.png" step="VALIDATE" title="Reality gets the final vote." copy="An independent reference trace clears every SLO: 2.66-second p95, 274 tokens per second, 100 out of 100." accent={acid} focus={{x:1040,y:855,label:"INCIDENT CONTAINED"}}/></Sequence>
-    <Sequence from={3600} durationInFrames={360}><CloudScene duration={360}/></Sequence>
-    <Sequence from={3960} durationInFrames={300}><CodexScene duration={300}/></Sequence>
-    <Sequence from={4260} durationInFrames={150}><Closing duration={150}/></Sequence>
+    <Sequence from={0} durationInFrames={180}><Opening duration={180}/></Sequence>
+    <Sequence from={180} durationInFrames={330}><ProductScene duration={330} image="01-home.png" step="THE PROBLEM" title="Production is a brutal classroom." copy="Inference engineers need causal intuition before a real launch turns into an expensive lesson." accent={red} focus={{x:1385,y:330,label:"P95 · 14.82s"}}/></Sequence>
+    <Sequence from={510} durationInFrames={330}><ProductScene duration={330} image="02-incident.png" step="MISSION 01" title="Five constraints. One intervention." copy="Latency, throughput, VRAM, quality, and cost move together. The learner must protect all five." accent={amber} focus={{x:195,y:410,label:"THE SLO ENVELOPE"}}/></Sequence>
+    <Sequence from={840} durationInFrames={420}><WorldModelScene duration={420}/></Sequence>
+    <Sequence from={1260} durationInFrames={270}><ProductScene duration={270} image="03-baseline-rollout.png" step="PREDICT" title="The baseline collapses." copy="Incoming token demand outruns decode capacity. Queue growth becomes the lesson—not a tooltip." accent={red} focus={{x:810,y:260,label:"389 QUEUED"}}/></Sequence>
+    <Sequence from={1530} durationInFrames={360}><ProductScene duration={360} image="04-intervention.png" step="INTERVENE" title="Change the serving stack." copy="INT4, continuous batching, prefix reuse, and speculative decoding reshape the system dynamics." accent={cyan} focus={{x:1600,y:455,label:"TUNE THE STACK"}}/></Sequence>
+    <Sequence from={1890} durationInFrames={330}><ProductScene duration={330} image="05-success-forecast.png" step="ROLL OUT" title="Forecast before validation." copy="The learned model predicts a stable state. Its answer is visible—but it does not grade itself." accent={acid} focus={{x:840,y:810,label:"LEARNED SURROGATE"}}/></Sequence>
+    <Sequence from={2220} durationInFrames={300}><ProductScene duration={300} image="07-contained.png" step="VALIDATE" title="Reality gets the final vote." copy="An independent reference trace clears every SLO: 2.66-second p95, 274 tokens per second, 100 out of 100." accent={acid} focus={{x:1040,y:855,label:"INCIDENT CONTAINED"}}/></Sequence>
+    <Sequence from={2520} durationInFrames={300}><CloudScene duration={300}/></Sequence>
+    <Sequence from={2820} durationInFrames={300}><CodexScene duration={300}/></Sequence>
+    <Sequence from={3120} durationInFrames={180}><Closing duration={180}/></Sequence>
+    <CaptionTrack/>
   </AbsoluteFill>
 );

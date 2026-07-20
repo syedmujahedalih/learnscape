@@ -1,25 +1,27 @@
-Inference engineering is usually learned in production—when latency is already burning and every experiment is expensive.
+Most people learn inference engineering the worst possible way: after latency catches fire in production.
 
-P99 is a flight simulator for inference engineers.
+P ninety nine is a flight simulator for L L M systems.
 
-Instead of another architecture lecture, it drops you into a launch-day incident. Traffic jumped six times. An eight-billion-parameter service is missing its latency objective, the queue is compounding, and revenue is at risk.
+You start inside a launch-day incident. Traffic jumped six times. Requests are piling up, the GPU is saturated, and the service is missing its latency target.
 
-You have to protect five constraints at once: tail latency, throughput, memory, quality, and cost.
+Your job is to protect five things at the same time: latency, throughput, memory, quality, and cost.
 
-First, commit to a failure mode. Then change the serving stack: precision, continuous batching, K-V cache, concurrency, prefix caching, and speculative decoding.
+First, make a prediction. Then change the serving stack. You can adjust weight precision, batching, the K V cache, concurrency, prefix caching, and speculative decoding.
 
-P99 does not reveal a canned answer. A compact learned world model recursively rolls the system state forward—queue depth, active requests, V-RAM, utilization, throughput, and P-ninety-five latency.
+Here is the important technical part.
 
-Here, the baseline collapses. Token demand outruns decode capacity and the queue explodes.
+P ninety nine uses a small learned dynamics model. It takes the current system state and predicts the next one: the queue, active requests, memory, utilization, throughput, and tail latency. Then it feeds that prediction back in and rolls forward again.
 
-Now I quantize to INT four, batch continuously, reuse the shared prefix, and enable speculative decoding. The model forecasts a stable system.
+The baseline fails because incoming demand is higher than decode capacity. The queue keeps growing.
 
-Then an independent reference trace grades that forecast. P-ninety-five falls below four seconds, throughput clears demand, memory stays safe, and the incident is contained.
+Now I switch to four-bit weights, batch requests together, reuse the shared prefix, and enable speculative decoding.
 
-The checked-in network has six hundred and thirty parameters and was trained on ten thousand eight hundred bootstrap transitions. P99 labels that provenance explicitly. It is a real learned next-state model, not a fake production benchmark.
+The learned model predicts that the queue will clear. Then a separate reference trace checks the answer. Latency drops below four seconds, throughput clears demand, and the incident scores one hundred out of one hundred.
 
-The next layer is already implemented: an authenticated Modal runner can launch a short-lived T-four, L-four, or A-ten G, execute llama dot C-P-P, and capture real server and NVIDIA telemetry for retraining.
+So, is this a real world model? It is a real learned next-state surrogate. But today, it is trained on bootstrap traces from our reference simulator, not measurements from real GPUs. P ninety nine says that clearly.
 
-Codex with GPT five point six helped me pressure-test the original education idea, pivot to inference engineering, design the product, implement the learned rollout and cloud trace architecture, write the tests, and deploy the final experience.
+The next data layer is already built: an authenticated Modal worker can launch a temporary GPU, run llama C plus plus, and collect real telemetry for retraining.
 
-P99 turns systems intuition into something you can practice: predict, intervene, validate, and understand why.
+Codex with GPT five point six helped me pressure-test the idea, pivot the product, implement the model and trace runner, write the tests, and deploy the experience.
+
+P ninety nine lets you break the stack safely, then understand why.
