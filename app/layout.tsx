@@ -1,20 +1,20 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { DM_Serif_Display, Manrope } from "next/font/google";
+import { JetBrains_Mono, Manrope } from "next/font/google";
 import "./globals.css";
 
 const manrope = Manrope({ variable: "--font-sans", subsets: ["latin"] });
-const display = DM_Serif_Display({ variable: "--font-display", subsets: ["latin"], weight: "400" });
+const mono = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin"] });
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
-  const host = requestHeaders.get("host") ?? "learnscape.local";
+  const host = requestHeaders.get("host") ?? "p99.local";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? "https";
-  const title = "Learnscape — Learn control through world models.";
-  const description = "Build intuition for physics and controls by predicting what a learned dynamics model will do, testing its plan, and exposing where its internal world diverges from reality.";
+  const title = "P99 — The inference systems lab.";
+  const description = "Master LLM inference by fighting production incidents: predict the bottleneck, tune the serving stack, replay the workload, and diagnose the result.";
   return { title, description, icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" }, openGraph: { title, description, images: [`${protocol}://${host}/og.png`] }, twitter: { card: "summary_large_image", title, description, images: [`${protocol}://${host}/og.png`] } };
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body className={`${manrope.variable} ${display.variable} antialiased`}>{children}</body></html>;
+  return <html lang="en"><body className={`${manrope.variable} ${mono.variable} antialiased`}>{children}</body></html>;
 }

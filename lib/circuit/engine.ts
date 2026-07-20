@@ -1,1 +1,0 @@
-export function calculateCircuit(voltage: number, resistance: number, closed: boolean) { const current = closed && resistance > 0 ? voltage / resistance : 0; return { current, power: voltage * current, brightness: Math.min(100, Math.round(current * 30)), closed }; }

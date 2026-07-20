@@ -1,1 +1,0 @@
-export function statistics(values: number[]) { const ordered = [...values].sort((a,b) => a-b); const mean = values.reduce((s,v) => s + v, 0) / values.length; const mid = Math.floor(values.length / 2); const median = values.length % 2 ? ordered[mid] : (ordered[mid - 1] + ordered[mid]) / 2; return { mean, median, ordered }; }

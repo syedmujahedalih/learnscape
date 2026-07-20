@@ -1,24 +1,20 @@
-# Architecture
+# P99 architecture
 
-One React shell owns the CartPole world-model lab, source interpretation, and the earlier causal-learning missions. Independent deterministic engines remain the authoritative environment references. `app/api/analyze` routes source interpretation to local llama.cpp or optional GPT and validates the resulting blueprint.
+P99 separates the learner-facing system model from the authoritative trace replay.
 
-The CartPole vertical slice adds a real latent world-model loop:
+1. A fixed workload describes arrival rate, prompt and output length, prefix reuse, model size, and accelerator memory.
+2. The learner configures precision, batching, KV-cache budget, concurrency, prefix caching, and speculative decoding.
+3. The system model forecasts TTFT, p95 latency, throughput, VRAM, queue depth, quality, cost, utilization, and power.
+4. The learner commits to a predicted failure mode.
+5. The trace engine evaluates the same configuration and returns a deliberately small forecast error.
+6. Five simultaneous SLO constraints produce the mission score and bottleneck diagnosis.
 
-1. A renderer converts consecutive CartPole states into two 24 × 24 grayscale observations.
-2. A learned encoder maps the observation pair into an eight-dimensional latent state.
-3. An action-conditioned transition network predicts the next latent for left, coast, or right.
-4. Cross-Entropy Method search evaluates candidate action sequences in latent space.
-5. Model Predictive Control executes the first action, observes reality, and replans.
-6. The analytic CartPole environment judges the action. Hidden friction exposes distribution shift through latent prediction error.
+`lib/inference/engine.ts` contains both models so the prototype is deterministic, replayable, browser-native, and safe to demo without a GPU. This is an inference-systems simulator, not currently a learned world model.
 
-The encoder and transition contain 149,776 learned parameters and are trained on 28,000 procedurally generated nominal transitions. A small physics probe is trained jointly to make the learned representation inspectable. This is a physics-grounded visual latent model, not a claim of reward-free general world modeling.
+## Next technical milestone
 
-The pendulum vertical slice deliberately separates five concerns:
+Replace the analytic forecast with a learned surrogate trained on benchmark traces shaped as:
 
-1. The domain engine advances the authoritative physical state with RK4 integration.
-2. The Three.js world turns that state into a spatial experiment, energy traces, and accessible values.
-3. A trained 818-parameter transition network forecasts the next physical state and is checked against the reference engine.
-4. The learner-state engine updates a probability distribution over three misconceptions and transfer readiness from observable student evidence.
-5. The experiment selector estimates information gain and targets the next controlled experiment at the most useful uncertainty.
+`hardware + model + workload + serving configuration → latency + throughput + memory + failures`
 
-The predictive network never replaces the physics reference, and the learner-state probabilities are inspectable hypotheses rather than psychological diagnoses. The AI tutor layer can use local llama.cpp during development or GPT later; the core judged path remains deterministic.
+A local agent can connect llama.cpp or vLLM to the deployed UI through an outbound authenticated channel. The trace executor remains authoritative; the learned surrogate must expose prediction error rather than grade itself.

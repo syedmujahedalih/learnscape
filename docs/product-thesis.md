@@ -1,7 +1,9 @@
 # Product thesis
 
-Controls courses teach students to reason about models, but most learning tools give them either equations or a simulator whose internal assumptions are invisible. Learnscape makes the learned model itself inspectable and falsifiable.
+Inference engineering is learned poorly through passive lectures because the important concepts are coupled tradeoffs. Batching can improve throughput while damaging tail latency. Quantization frees memory while changing quality. Context length and concurrency compete for KV cache. A single optimization can move the bottleneck elsewhere.
 
-The wedge is physics and robotics education: a student predicts how a model will behave, lets it imagine action sequences, executes the plan against trusted dynamics, then changes the world and diagnoses the mismatch. Model error becomes learning evidence.
+P99 turns those relationships into incidents with consequences. The learner must make a prediction, intervene under constraints, observe the system response, and diagnose the bottleneck.
 
-The buyer is an instructor or department teaching dynamics, controls, robotics, or model-based reinforcement learning. The first validation question is behavioral: do students using the predict–imagine–act–falsify loop diagnose distribution shift and transfer control concepts better than students using the same simulator without the learned-model layer?
+The initial buyer is an instructor teaching ML systems, LLM systems, MLOps, or AI infrastructure. The early adopter is a technically capable learner who can use an API but has never operated an inference server under load.
+
+The durable product advantage must become a library of trace-backed incidents and an instructor view of learner misconceptions—not generic infrastructure documentation.

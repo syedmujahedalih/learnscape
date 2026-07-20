@@ -1,238 +1,135 @@
 "use client";
 
-import { ChangeEvent, lazy, Suspense, useState } from "react";
-import type { LearnscapeBlueprint } from "@/lib/blueprint/schema";
-import { analysisFromBlueprint, type AnalysisMeta } from "@/lib/blueprint/source-analysis";
-import { pendulumBlueprint } from "@/lib/blueprint/fixtures";
-import { calculateTitration } from "@/lib/titration/engine";
-import { calculateCircuit } from "@/lib/circuit/engine";
-import { statistics } from "@/lib/statistics/simulations";
-import { approximatePeriod } from "@/lib/pendulum/engine";
-import { choosePendulumExperiment, getPendulumExperiment, inferPendulumBeliefs, pendulumBeliefLabels, type AdaptiveExperiment, type PendulumBeliefs } from "@/lib/learner/pendulum";
+import { useMemo, useState } from "react";
+import { initialConfig, launchWorkload, modelForecast, simulateInference, type BatchSize, type CacheSize, type Concurrency, type InferenceConfig, type Precision } from "@/lib/inference/engine";
 
-const PendulumWorld = lazy(() => import("./PendulumWorld"));
-const CartPoleWorld = lazy(() => import("./CartPoleWorld"));
+type View = "home" | "incident";
+type Prediction = "clear" | "latency" | "oom" | "";
 
-type View = "home" | "upload" | "reveal" | "world" | "cartpole";
-type WorldTab = "lab" | "molecular" | "curve" | "equation";
-
-const sampleText = "For a simple pendulum at modest angles, the period is approximately T = 2π√(L/g). The bob’s mass changes its kinetic and potential energy, but does not change the ideal period.";
-const defaultLlamaBaseUrl = "http://127.0.0.1:8080/v1";
-const defaultLlamaModel = "Qwen3-14B-Q4_K_M.gguf";
-const statusLabel = (status: LearnscapeBlueprint["validationStatus"]) => status === "template_validated" ? "Interactive lab" : status === "experimental_preview" ? "Interactive concept studio" : "Not available";
-const MAX_PDF_PAGES = 6;
-
-async function compressPage(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => {
-      const longestSide = Math.max(image.naturalWidth, image.naturalHeight);
-      const scale = Math.min(1, 1600 / longestSide);
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-      const context = canvas.getContext("2d");
-      if (!context) { URL.revokeObjectURL(objectUrl); reject(new Error("Canvas is unavailable.")); return; }
-      context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL("image/jpeg", .82);
-      URL.revokeObjectURL(objectUrl);
-      if (dataUrl.length > 6_000_000) { reject(new Error("Prepared image is too large.")); return; }
-      resolve(dataUrl);
-    };
-    image.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Image could not be read.")); };
-    image.src = objectUrl;
-  });
-}
-
-async function preparePdf(file: File) {
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const [pdfjs, worker] = await Promise.all([
-    import("pdfjs-dist/legacy/build/pdf.mjs"),
-    import("pdfjs-dist/legacy/build/pdf.worker.min.mjs?url"),
-  ]);
-  pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
-  const document = await pdfjs.getDocument({ data: bytes }).promise;
-  if (document.numPages > MAX_PDF_PAGES) throw new Error(`This PDF has ${document.numPages} pages. Choose up to ${MAX_PDF_PAGES} pages so one world stays focused.`);
-  const data = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("PDF could not be read."));
-    reader.onerror = () => reject(new Error("PDF could not be read."));
-    reader.readAsDataURL(file);
-  });
-  if (data.length > 17_000_000) throw new Error("That PDF is too large. Keep it under 12 MB.");
-  return { data, pages: document.numPages };
-}
+const formatSeconds = (ms: number) => ms ? `${(ms / 1000).toFixed(2)}s` : "—";
 
 export default function Home() {
   const [view, setView] = useState<View>("home");
-  const [blueprint, setBlueprint] = useState<LearnscapeBlueprint>(pendulumBlueprint);
-  const [provider, setProvider] = useState<"llama" | "gpt">("llama");
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [openaiApiKey, setOpenaiApiKey] = useState("");
-  const [llamaBaseUrl, setLlamaBaseUrl] = useState(defaultLlamaBaseUrl);
-  const [llamaModel, setLlamaModel] = useState(defaultLlamaModel);
-  const [llamaApiKey, setLlamaApiKey] = useState("");
-  const [sourceText, setSourceText] = useState("");
-  const [fileName, setFileName] = useState("");
-  const [pageImage, setPageImage] = useState("");
-  const [sourcePdf, setSourcePdf] = useState("");
-  const [pdfPages, setPdfPages] = useState(0);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [notice, setNotice] = useState("");
-  const [analysisMeta, setAnalysisMeta] = useState<AnalysisMeta>({ ...analysisFromBlueprint(pendulumBlueprint), provider: "deterministic", live: false, model: "Learnscape demo replay" });
-  const [worldTab, setWorldTab] = useState<WorldTab>("lab");
-  const [addedMl, setAddedMl] = useState(0);
-  const [voltage, setVoltage] = useState(6);
-  const [resistance, setResistance] = useState(6);
-  const [closed, setClosed] = useState(true);
-  const [outlier, setOutlier] = useState(13);
-  const [missionStep, setMissionStep] = useState(1);
-  const [prediction, setPrediction] = useState("");
-  const [confidence, setConfidence] = useState(80);
-  const [evidenceChoice, setEvidenceChoice] = useState("");
-  const [resultReviewed, setResultReviewed] = useState("");
-  const [explanation, setExplanation] = useState("");
-  const [transferChoice, setTransferChoice] = useState("");
-  const [missionComplete, setMissionComplete] = useState(false);
-  const [pendulumLength, setPendulumLength] = useState(1.4);
-  const [pendulumMass, setPendulumMass] = useState(1);
-  const [pendulumAngle, setPendulumAngle] = useState(40);
-  const [pendulumDamping, setPendulumDamping] = useState(.03);
-  const [pendulumReleased, setPendulumReleased] = useState(false);
-  const [preparedExperiment, setPreparedExperiment] = useState<AdaptiveExperiment | null>(null);
-  const [challengeIndex, setChallengeIndex] = useState(0);
-  const [conceptConnection, setConceptConnection] = useState("");
-  const [conceptObservation, setConceptObservation] = useState("");
+  const [config, setConfig] = useState<InferenceConfig>(initialConfig);
+  const [prediction, setPrediction] = useState<Prediction>("");
+  const [forecasted, setForecasted] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [observed, setObserved] = useState(false);
+  const [attempt, setAttempt] = useState(1);
+  const forecast = useMemo(() => modelForecast(config), [config]);
+  const result = useMemo(() => simulateInference(config), [config]);
+  const shown = observed ? result : forecasted ? forecast : simulateInference(initialConfig);
 
-  const titration = calculateTitration(addedMl);
-  const circuit = calculateCircuit(voltage, resistance, closed);
-  const values = [4, 5, 6, 6, 7, 8, outlier];
-  const stats = statistics(values);
-  const worldKind = blueprint.recommendedExperience.templateId;
-  const pendulumBeliefs = inferPendulumBeliefs({ prediction, confidence, experimentCompleted: pendulumReleased, reflection: resultReviewed, explanation, transferChoice });
-  const adaptiveExperiment = choosePendulumExperiment(pendulumBeliefs);
-  const activeExperiment = preparedExperiment ?? adaptiveExperiment;
-  const hasExperimented = worldKind === "pendulum_world" ? pendulumReleased : worldKind === "acid_base_titration" ? addedMl > 0 : worldKind === "ohms_law_circuit" ? voltage !== 6 || resistance !== 6 || !closed : worldKind === "statistics_explorer" ? outlier !== 13 : Boolean(conceptConnection);
-  const pendulumOutcome = activeExperiment.id === "compare_mass" ? `The 1 kg baseline and ${pendulumMass.toFixed(1)} kg test bob have the same ${approximatePeriod(pendulumLength).toFixed(2)} s ideal period. Mass changes energy, not swing time.` : activeExperiment.id === "compare_length" ? `Stretching the cord to ${pendulumLength.toFixed(1)} m increases the ideal period to ${approximatePeriod(pendulumLength).toFixed(2)} s. Length changes swing time.` : `Potential energy peaks at release; kinetic energy peaks at the bottom. The total only falls when damping removes energy.`;
-  const outcome = worldKind === "pendulum_world" ? pendulumOutcome : worldKind === "acid_base_titration" ? `At ${addedMl.toFixed(2)} mL added, the pH is ${titration.pH.toFixed(2)} and ${titration.excess === "none" ? "neither strong reactant is in excess" : `${titration.excess} remains in excess`}.` : worldKind === "ohms_law_circuit" ? `The circuit now carries ${circuit.current.toFixed(2)} A at ${voltage} V and ${resistance} Ω.` : worldKind === "statistics_explorer" ? `Moving the outlier to ${outlier} changed the mean to ${stats.mean.toFixed(2)}, while the median is ${stats.median.toFixed(2)}.` : `You mapped ${analysisMeta.primaryCause} to ${analysisMeta.primaryEffect}. Now name the evidence that would support or revise that relationship.`;
-  const achievement = worldKind === "pendulum_world" && pendulumReleased && pendulumLength >= 2 ? "Period Cartographer" : worldKind === "acid_base_titration" && Math.abs(addedMl - titration.equivalenceMl) <= .1 ? "Equivalence Hunter" : worldKind === "ohms_law_circuit" && Math.abs(circuit.current - 1.5) < .02 ? "Current Architect" : worldKind === "statistics_explorer" && outlier >= 18 ? "Robustness Detective" : "";
-  const insightScore = (prediction ? 20 : 0) + (hasExperimented ? 25 : 0) + (resultReviewed ? 20 : 0) + (explanation.trim().length >= 20 ? 20 : 0) + (transferChoice ? 15 : 0);
+  const update = <K extends keyof InferenceConfig>(key: K, value: InferenceConfig[K]) => {
+    setConfig(current => ({ ...current, [key]: value }));
+    setForecasted(false);
+    setObserved(false);
+  };
 
-  const resetMission = () => { setMissionStep(1); setPrediction(""); setConfidence(80); setEvidenceChoice(""); setResultReviewed(""); setExplanation(""); setTransferChoice(""); setMissionComplete(false); setPendulumReleased(false); setPreparedExperiment(null); setConceptConnection(""); setConceptObservation(""); };
-  const openWorld = (_trigger?: unknown) => { void _trigger; setChallengeIndex(0); setView("world"); setAddedMl(0); setVoltage(6); setResistance(6); setClosed(true); setOutlier(13); setPendulumLength(1.4); setPendulumMass(1); setPendulumAngle(40); setPendulumDamping(.03); setPendulumReleased(false); resetMission(); };
-  const startGuidedDemo = () => { setBlueprint(pendulumBlueprint); openWorld(); };
-  const prepareAdaptiveExperiment = () => {
-    const experiment = worldKind === "pendulum_world" ? getPendulumExperiment(challengeIndex === 0 ? "compare_mass" : "compare_length") : adaptiveExperiment;
-    if (experiment.id === "compare_mass") { setPendulumLength(1.4); setPendulumMass(3); setPendulumAngle(40); setPendulumDamping(.03); }
-    if (experiment.id === "compare_length") { setPendulumLength(2.2); setPendulumMass(1); setPendulumAngle(40); setPendulumDamping(.03); }
-    if (experiment.id === "trace_energy") { setPendulumLength(1.4); setPendulumMass(1); setPendulumAngle(60); setPendulumDamping(0); }
-    setPendulumReleased(false); setEvidenceChoice(""); setPreparedExperiment(experiment);
+  const runReplay = () => {
+    setRunning(true);
+    setObserved(false);
+    window.setTimeout(() => { setRunning(false); setObserved(true); }, 1350);
   };
-  const startNextChallenge = () => { setChallengeIndex(current => current === 0 ? 1 : 0); setPendulumLength(1.4); setPendulumMass(1); setPendulumAngle(40); setPendulumDamping(.03); resetMission(); };
-  const analyze = async (text = sourceText, selectedProvider = provider, image = pageImage, pdf = sourcePdf) => {
-    setAnalyzing(true); setNotice("");
-    try {
-      const headers: Record<string, string> = { "content-type": "application/json" };
-      if (openaiApiKey.trim()) headers["x-learnscape-openai-key"] = openaiApiKey.trim();
-      if (llamaBaseUrl.trim()) headers["x-learnscape-llama-base-url"] = llamaBaseUrl.trim();
-      if (llamaModel.trim()) headers["x-learnscape-llama-model"] = llamaModel.trim();
-      if (llamaApiKey.trim()) headers["x-learnscape-llama-key"] = llamaApiKey.trim();
-      const response = await fetch("/api/analyze", { method: "POST", headers, body: JSON.stringify({ text, image: image || undefined, pdf: pdf || undefined, provider: selectedProvider }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Analysis did not complete.");
-      setBlueprint(data.blueprint); setAnalysisMeta(data.analysis); setSourceText(data.blueprint.source.extractedText ?? data.analysis.sourceExcerpt); setNotice(data.warning ?? ""); setView("reveal");
-    } catch (error) { setNotice(error instanceof Error ? error.message : "Analysis did not complete."); }
-    finally { setAnalyzing(false); }
-  };
-  const onFile = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]; if (!file) return;
-    try {
-      if (file.type === "application/pdf") {
-        const prepared = await preparePdf(file);
-        setFileName(file.name); setSourcePdf(prepared.data); setPdfPages(prepared.pages); setPageImage(""); setSourceText(""); setProvider("gpt");
-        setNotice(`${prepared.pages}-page PDF ready. GPT will read it as one focused source.`);
-        return;
-      }
-      if (!/^image\/(png|jpeg|webp)$/i.test(file.type)) { setNotice("Choose a PNG, JPEG, WebP, or PDF under 6 pages."); return; }
-      const compressed = await compressPage(file);
-      setFileName(file.name); setPageImage(compressed); setSourcePdf(""); setPdfPages(0); setSourceText(""); setProvider("gpt");
-      setNotice("Page ready. GPT will read it and create the lesson in one request.");
-    } catch (error) { setNotice(error instanceof Error ? error.message : "That source could not be prepared. Try a PNG, JPEG, or a short PDF."); }
-  };
-  const onPendulumExperiment = () => { setPendulumReleased(true); };
-  const mission = worldKind !== "concept_studio" && worldKind !== "unsupported" ? <Mission kind={worldKind} challengeIndex={challengeIndex} missionStep={missionStep} setMissionStep={setMissionStep} prediction={prediction} setPrediction={setPrediction} confidence={confidence} setConfidence={setConfidence} evidenceChoice={evidenceChoice} setEvidenceChoice={setEvidenceChoice} hasExperimented={hasExperimented} outcome={outcome} resultReviewed={resultReviewed} setResultReviewed={setResultReviewed} explanation={explanation} setExplanation={setExplanation} transferChoice={transferChoice} setTransferChoice={setTransferChoice} missionComplete={missionComplete} setMissionComplete={setMissionComplete} score={insightScore} achievement={achievement} onReset={resetMission} onNextChallenge={startNextChallenge} adaptation={worldKind === "pendulum_world" ? { beliefs: pendulumBeliefs, experiment: activeExperiment, onPrepare: prepareAdaptiveExperiment } : null} /> : null;
 
-  return <main className="app-shell">
-    <header className="topbar">
-      <button className="brand" onClick={() => setView("home")} aria-label="Go to Learnscape home"><span className="brand-mark">L</span><span>learnscape</span></button>
-      <div className="top-meta">
-        <button className="text-button" onClick={() => setView("upload")}>Bring a physics page</button><button className="text-button" aria-label="Model settings — choose GPT or local model" onClick={() => setSettingsOpen(true)}>Connections</button><button className="nav-lesson" onClick={() => setView("cartpole")}>World model lab</button>
-      </div>
+  const reset = () => {
+    setConfig(initialConfig); setPrediction(""); setForecasted(false); setObserved(false); setRunning(false); setAttempt(1);
+  };
+
+  return <main className="infra-app">
+    <header className="infra-nav">
+      <button className="infra-brand" onClick={() => setView("home")} aria-label="P99 home"><span>P/</span>P99</button>
+      <div className="nav-center"><i/> INFERENCE SYSTEMS LAB</div>
+      <div className="nav-actions"><span className="runtime-pill"><i/> TRACE ENGINE ONLINE</span><button onClick={() => setView("incident")}>MISSION 01</button></div>
     </header>
 
-    {settingsOpen && <div className="settings-backdrop" role="presentation" onClick={() => setSettingsOpen(false)}><section className="settings-card" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={event => event.stopPropagation()}><div className="settings-heading"><div><p className="kicker">HOW LEARNSCAPE READS A SOURCE</p><h2 id="settings-title">Connections</h2></div><button className="text-button" onClick={() => setSettingsOpen(false)}>Close</button></div><p className="settings-intro">Choose one reader when you create a lesson. GPT uses your OpenAI API key. Local mode uses your llama.cpp server only when Learnscape is running somewhere that can reach that server.</p><div className="settings-section"><p className="settings-section-title">GPT</p><label className="settings-field">OPENAI API KEY <span>(ONLY NEEDED FOR GPT)</span><input type="password" autoComplete="off" value={openaiApiKey} onChange={event => setOpenaiApiKey(event.target.value)} placeholder="Paste your key" /></label><small className="settings-help">Held in this tab and sent only with a GPT analysis request. It is not saved in the Learnscape project. Clear it when you finish.</small></div><div className="settings-section"><p className="settings-section-title">LOCAL MODEL</p><label className="settings-field">LLAMA.CPP SERVER URL<input type="url" value={llamaBaseUrl} onChange={event => setLlamaBaseUrl(event.target.value)} placeholder={defaultLlamaBaseUrl} /></label><label className="settings-field">MODEL NAME<input value={llamaModel} onChange={event => setLlamaModel(event.target.value)} placeholder={defaultLlamaModel} /></label><label className="settings-field">SERVER KEY <span>(OPTIONAL)</span><input type="password" autoComplete="off" value={llamaApiKey} onChange={event => setLlamaApiKey(event.target.value)} placeholder="Only if your server requires one" /></label><small className="settings-help">The public Learnscape demo cannot reach a Mac-only localhost server. Run Learnscape locally, or expose the server through an authenticated HTTPS tunnel.</small><details className="settings-local-guide"><summary>Run Learnscape with a local model</summary><ol><li>Start your llama.cpp server at the URL above.</li><li>In the Learnscape folder, run <code>npm install</code> once, then <code>npm run dev</code>.</li><li>Open the local address printed in the terminal and choose Local.</li></ol></details></div><div className="settings-actions"><button className="secondary-button" onClick={() => { setOpenaiApiKey(""); setLlamaApiKey(""); setSettingsOpen(false); }}>Clear keys</button><button className="primary-button" onClick={() => setSettingsOpen(false)}>Done <span>→</span></button></div></section></div>}
+    {view === "home" ? <Landing onEnter={() => setView("incident")} /> : <section className="incident-view">
+      <div className="incident-commandbar">
+        <div><button onClick={() => setView("home")}>← EXIT LAB</button><span>INCIDENT / 01</span><b>Launch-day latency spiral</b></div>
+        <div className="incident-clock"><small>REVENUE AT RISK</small><strong>$12,480</strong><span>/ min</span></div>
+        <button className="reset" onClick={reset}>RESET RUN</button>
+      </div>
 
-    {view === "home" && <section className="home-view controls-home">
-      <div className="eyebrow">LEARNABLE CONTROL WORLDS <span>•</span> PHYSICS + ROBOTICS</div>
-      <div className="hero-grid"><div className="hero-copy"><h1>Learn control by testing a <em>model of the world.</em></h1><p className="hero-description">See what a learned dynamics model imagines. Let it act. Then change the physics and find the exact moment its internal world stops matching reality.</p><div className="hero-actions"><button className="primary-button" onClick={() => setView("cartpole")}>Enter the CartPole lab <span>→</span></button><button className="secondary-button demo-button" onClick={startGuidedDemo}>Explore the pendulum</button></div><div className="learning-loop"><span>Predict</span><b>→</b><span>Imagine</span><b>→</b><span>Act</span><b>→</b><span>Falsify</span></div></div>
-        <div className="hero-stage controls-hero" aria-label="A learned model imagining how to balance a CartPole"><div className="stage-label">WORLD MODEL LAB · CARTPOLE <b>LIVE IN BROWSER</b></div><div className="hero-wm-copy"><span>THE CONTROL PROBLEM</span><p>Catch a pole that is already <em>falling.</em></p><small>The model plans from pixels. Physics decides whether it worked.</small></div><div className="hero-track"><div className="hero-cart"><i/><b/></div><div className="hero-cart ghost"><i/><b/></div></div><div className="hero-latent"><small>8D LATENT · LIVE</small>{[42,72,55,88,34,65,48,80].map((height,index)=><i key={index} style={{height:`${height}%`}}/>)}</div><div className="hero-imagination"><span>192 candidate futures</span><b>→</b><span>one action plan</span></div><div className="stage-readout"><span>MODEL READY</span><strong>8D</strong><small>pixels → latent → action</small></div></div></div>
+      <div className="incident-grid">
+        <aside className="mission-panel">
+          <div className="panel-index">01 / CONFIGURE</div>
+          <h1>Stop the<br/><em>latency spiral.</em></h1>
+          <p>Traffic jumped 6× after launch. Keep the 8B model online without breaking latency, quality, memory, or cost.</p>
+          <div className="slo-list">
+            <Slo label="P95 LATENCY" value="≤ 4.00s" pass={!observed || result.p95Ms <= 4000} active={observed}/>
+            <Slo label="THROUGHPUT" value="≥ 230 tok/s" pass={!observed || result.throughput >= 230} active={observed}/>
+            <Slo label="VRAM" value="< 24 GB" pass={!observed || !result.oom} active={observed}/>
+            <Slo label="QUALITY" value="≥ 95%" pass={!observed || result.quality >= 95} active={observed}/>
+            <Slo label="COST" value="≤ $1.50 / 1M" pass={!observed || result.costPerMillion <= 1.5} active={observed}/>
+          </div>
+          <div className="attempt-strip"><span>ATTEMPT {attempt.toString().padStart(2,"0")}</span><b>{observed ? `${result.score}/100` : "UNSCORED"}</b></div>
+        </aside>
 
-      <section className="value-strip"><article><span>01</span><div><b>See what it imagines</b><p>The latent model rolls possible futures forward before acting.</p></div></article><article><span>02</span><div><b>Reality gets a vote</b><p>A trusted physics environment executes the selected plan.</p></div></article><article><span>03</span><div><b>Make the model fail</b><p>Hidden friction turns prediction error into a lesson about system identification.</p></div></article></section>
+        <section className="systems-panel" aria-label="Inference serving system">
+          <div className="systems-head"><div><span>LIVE SYSTEM TOPOLOGY</span><h2>inference-prod-usw2</h2></div><div className={`health ${observed && result.passed ? "healthy" : "burning"}`}><i/>{observed && result.passed ? "SLO HEALTHY" : "SLO VIOLATION"}</div></div>
 
-      <section className="platform-thesis"><div className="platform-copy"><p className="kicker">AN HONEST WORLD-MODEL STACK</p><h2>Imagination you can<br/><em>interrogate.</em></h2><p>Learnscape is narrowing to physics and controls: domains where a learned latent model can plan, a trusted simulator can challenge it, and model error becomes educational evidence.</p><button className="primary-button" onClick={() => setView("cartpole")}>Test the learned model <span>→</span></button></div><div className="platform-stack"><article><span>01</span><div><b>Visual encoder</b><p>Two rendered observations become an eight-dimensional latent state.</p></div></article><article><span>02</span><div><b>Action-conditioned dynamics</b><p>The learned transition predicts what left, coast, or right will cause next.</p></div></article><article><span>03</span><div><b>Latent planning</b><p>Cross-entropy search compares hundreds of imagined action sequences.</p></div></article><article><span>04</span><div><b>Physics reality check</b><p>Known dynamics expose error instead of letting the model grade itself.</p></div></article></div></section>
-    </section>}
+          <div className="traffic-ribbon"><span>LIVE TRAFFIC</span><b>{launchWorkload.requestRate} req/s</b><i>1,200 input</i><i>96 output</i><i>67% shared prefix</i></div>
 
-    {view === "cartpole" && <Suspense fallback={<div className="wm-loading">Preparing the learned world…</div>}><CartPoleWorld onBack={() => setView("home")}/></Suspense>}
+          <div className={`pipeline ${running ? "running" : ""}`}>
+            <Node kind="edge" number="01" title="API GATEWAY" metric={`${shown.queueDepth} queued`} alert={shown.queueDepth > 55}/>
+            <Flow active={running}/>
+            <Node kind="scheduler" number="02" title="SCHEDULER" metric={`batch ${config.batchSize}`} alert={false}/>
+            <Flow active={running}/>
+            <Node kind="gpu" number="03" title="A10G · 24 GB" metric={`${shown.utilization}% util`} alert={shown.oom}/>
+            <Flow active={running}/>
+            <Node kind="stream" number="04" title="TOKEN STREAM" metric={`${shown.throughput} tok/s`} alert={shown.throughput < 230}/>
+          </div>
 
-    {view === "upload" && <section className="workflow-view"><div className="workflow-rail"><p className="kicker">SOURCE → WORLD</p><h2>Bring in course material.</h2><p>Choose one image, paste text, or add a short PDF. Learnscape finds the clearest relationship to explore.</p><ol><li className="active">1 <span>Source</span></li><li>2 <span>Key relationship</span></li><li>3 <span>Interactive world</span></li></ol></div><div className="upload-panel"><div className="panel-top"><span className="eyebrow">START WITH YOUR SOURCE</span><button className="text-button" onClick={() => setView("home")}>Cancel</button></div><div className={`drop-zone ${pageImage ? "has-page" : ""}`} style={pageImage ? { backgroundImage: `linear-gradient(rgba(13,22,40,.18),rgba(13,22,40,.18)),url(${pageImage})` } : undefined}><input id="source-image" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" onChange={onFile}/><label htmlFor="source-image"><span className="upload-icon">{pageImage || sourcePdf ? "✓" : "↑"}</span><strong>{fileName || "Choose an image or short PDF"}</strong><small>{sourcePdf ? `${pdfPages} pages · ready for GPT` : pageImage ? "Click to replace this source" : "PNG, JPEG, WebP, or PDF · up to 6 pages"}</small></label></div><div className="or-line"><span>OR TRY AN EXAMPLE</span></div><div className="sample-pills"><button onClick={() => { setPageImage(""); setSourcePdf(""); setPdfPages(0); setFileName(""); setBlueprint(pendulumBlueprint); setSourceText(sampleText); }}>Try the pendulum example</button></div><label className="field-label">{pageImage || sourcePdf ? "OPTIONAL NOTE FOR GPT" : "TEXT FROM THE SOURCE"}<textarea value={sourceText} onChange={event => setSourceText(event.target.value)} placeholder={pageImage || sourcePdf ? "Add context only if it helps identify the concept…" : "Paste a paragraph from a lesson or textbook…"} /></label><small className="field-help">{sourcePdf ? "GPT reads all PDF pages together. Keep the PDF focused on one lesson." : pageImage ? "GPT reads the image. Add a note only if it helps." : "Paste text to use your local model or GPT."}</small><div className="provider-row"><div><strong>{pageImage || sourcePdf ? "GPT source reader" : "How should Learnscape read this?"}</strong><small>{pageImage ? "Image understanding uses GPT and your OpenAI API key." : sourcePdf ? "PDF understanding uses GPT and your OpenAI API key." : provider === "llama" ? "Local model · no OpenAI key required" : "GPT · requires your OpenAI API key"}</small></div><div className="provider-toggle"><button disabled={Boolean(pageImage || sourcePdf)} className={provider === "llama" ? "selected" : ""} onClick={() => setProvider("llama")}>Local</button><button className={provider === "gpt" ? "selected" : ""} onClick={() => setProvider("gpt")}>GPT</button></div></div>{notice && <p className="notice">{notice}</p>}<button className="primary-button wide" disabled={analyzing || (!sourceText.trim() && !pageImage && !sourcePdf)} onClick={() => void analyze()}>{analyzing ? "Reading your source…" : "Create an interactive world"}<span>→</span></button></div></section>}
+          <div className="gpu-core">
+            <div className="gpu-visual"><div className="die"><span>CUDA</span><strong>{shown.utilization}%</strong><small>{shown.powerWatts} W</small></div>{Array.from({length:24},(_,index)=><i key={index} className={index < Math.round(shown.vramGb) ? "filled" : ""}/>)}</div>
+            <div className="memory-map"><div className="map-title"><span>VRAM ALLOCATION</span><b>{shown.vramGb} / 24 GB</b></div><div className="memory-bar"><i style={{width:`${Math.min(100, shown.vramGb / 24 * 100)}%`}}/></div><div className="memory-legend"><span><i className="weights"/>WEIGHTS</span><span><i className="cache"/>KV CACHE</span><span><i className="runtime"/>RUNTIME</span></div></div>
+          </div>
 
-    {view === "reveal" && <section className="reveal-view"><div className="reveal-top"><button className="back" onClick={() => setView("upload")}>← Source</button><div className={`provider-proof ${analysisMeta.live ? "is-live" : "is-replay"}`}><i/><span>{analysisMeta.live ? `LIVE · ${analysisMeta.model}` : "DEMO REPLAY · CONNECT A MODEL TO RUN LIVE"}</span></div></div><div className="reveal-heading"><p className="kicker">SOURCE → INTERACTIVE WORLD</p><h1>Your source became a <em>world.</em></h1><p>{blueprint.validationStatus === "template_validated" ? "Learnscape matched the material to an interactive lab with a clear variable to test." : "Learnscape created a source-grounded concept studio. It helps a student turn a claim into an evidence plan without pretending to be a numerical simulation."}</p></div><div className="transformation-grid"><article className="transform-source"><span>01 · SOURCE</span><h2>What the student reads</h2><p>“{sourceText.slice(0, 260) || analysisMeta.sourceExcerpt.slice(0, 260)}{(sourceText || analysisMeta.sourceExcerpt).length > 260 ? "…" : ""}”</p><small>Grounded in supplied material</small></article><article className="transform-map"><span>02 · WHAT CHANGES WHAT</span><h2>{analysisMeta.causalQuestion}</h2><div className="cause-effect"><b>{analysisMeta.primaryCause}</b><i>changes</i><b>{analysisMeta.primaryEffect}</b></div><div className="misconception-card"><small>BELIEF WORTH TESTING</small><strong>“{analysisMeta.misconception}”</strong></div></article><article className="transform-world"><span>03 · YOUR WORLD</span><div className={`world-preview ${worldKind}`}><b>{worldKind === "ohms_law_circuit" ? "I = V / R" : worldKind === "acid_base_titration" ? "pH" : worldKind === "statistics_explorer" ? "mean ↔ median" : worldKind === "pendulum_world" ? "swing" : "cause → evidence"}</b></div><h2>{blueprint.title}</h2><p>{analysisMeta.whyInteractive}</p><small className={`badge ${blueprint.validationStatus}`}>{statusLabel(blueprint.validationStatus)}</small></article></div>{notice && <p className="reveal-notice">{notice}</p>}<div className="reveal-actions"><button className="primary-button" onClick={() => openWorld(false)}>Open this world <span>→</span></button></div></section>}
+          <div className="metric-grid">
+            <Metric label="TIME TO FIRST TOKEN" value={formatSeconds(shown.ttftMs)} delta={observed ? `${Math.abs(result.ttftMs-forecast.ttftMs)}ms model error` : "model forecast"}/>
+            <Metric label="P95 END-TO-END" value={formatSeconds(shown.p95Ms)} danger={shown.p95Ms > 4000} delta="target ≤ 4.00s"/>
+            <Metric label="THROUGHPUT" value={`${shown.throughput}`} suffix="tok/s" danger={shown.throughput < 230} delta="demand 230 tok/s"/>
+            <Metric label="QUEUE DEPTH" value={`${shown.queueDepth}`} danger={shown.queueDepth > 55} delta="requests waiting"/>
+          </div>
 
-    {view === "world" && <section className={`world-view ${worldKind === "pendulum_world" ? "pendulum-experience" : ""}`}>
-      <div className="world-top"><button className="back" onClick={() => setView("home")}>← Home</button><div><span className="eyebrow">{statusLabel(blueprint.validationStatus)} · {worldKind === "concept_studio" ? "SOURCE-GROUNDED" : "TEST A RELATIONSHIP"}</span><h2>{blueprint.title}</h2></div><div className="world-hud"><div><small>{worldKind === "concept_studio" ? "MODE" : "CHALLENGE"}</small><b>{worldKind === "concept_studio" ? "explore" : `${challengeIndex + 1} / 2`}</b></div><div><small>YOUR STEP</small><b>{worldKind === "concept_studio" ? conceptConnection ? "evidence" : "map" : missionComplete ? "complete" : missionStep === 1 ? "predict" : missionStep < 4 ? "test" : "explain"}</b></div></div><button className="reset-button" onClick={openWorld}>↺ Start over</button></div>
-      {achievement && <div className="discovery-toast"><i>✦</i><div><small>DISCOVERY UNLOCKED</small><b>{achievement}</b></div><span>Evidence, not speed, earned this.</span></div>}
-      {mission}
-      {worldKind === "pendulum_world" ? <Suspense fallback={<div className="world-canvas world-loading"><span>Preparing the observatory…</span></div>}><PendulumWorld length={pendulumLength} mass={pendulumMass} angle={pendulumAngle} damping={pendulumDamping} setLength={setPendulumLength} setMass={setPendulumMass} setAngle={setPendulumAngle} setDamping={setPendulumDamping} locked={!prediction} focused={Boolean(preparedExperiment)} focus={activeExperiment.id} onExperiment={onPendulumExperiment} /></Suspense> : worldKind === "acid_base_titration" ? <TitrationWorld state={titration} addedMl={addedMl} setAddedMl={setAddedMl} tab={worldTab} setTab={setWorldTab} locked={!prediction} /> : worldKind === "ohms_law_circuit" ? <CircuitWorld voltage={voltage} resistance={resistance} closed={closed} setVoltage={setVoltage} setResistance={setResistance} setClosed={setClosed} locked={!prediction} /> : worldKind === "statistics_explorer" ? <StatisticsWorld values={values} outlier={outlier} setOutlier={setOutlier} mean={stats.mean} median={stats.median} locked={!prediction} /> : <ConceptStudio analysis={analysisMeta} connection={conceptConnection} setConnection={setConceptConnection} observation={conceptObservation} setObservation={setConceptObservation} />}
+          {running && <div className="run-overlay"><div className="scanline"/><span>REPLAYING PRODUCTION TRACE</span><b>Prefill → decode → stream</b></div>}
+          {observed && <div className={`incident-verdict ${result.passed ? "contained" : "failed"}`}><span>{result.passed ? "✓" : "!"}</span><div><small>{result.passed ? "INCIDENT CONTAINED" : "SLO STILL BURNING"}</small><b>{result.passed ? "The queue is draining with quality intact." : result.bottleneck}</b></div><strong>{result.score}/100</strong></div>}
+        </section>
+
+        <aside className="control-panel">
+          <div className="panel-index">02 / INTERVENE</div>
+          <h2>Change the serving stack.</h2>
+          <Control label="WEIGHT PRECISION" hint="memory ↔ quality"><Segment values={["FP16","INT8","INT4"]} selected={config.precision} onSelect={value=>update("precision",value as Precision)}/></Control>
+          <Control label="CONTINUOUS BATCH" hint="latency ↔ throughput"><Segment values={[1,8,16]} selected={config.batchSize} onSelect={value=>update("batchSize",value as BatchSize)} prefix="B"/></Control>
+          <Control label="KV CACHE BUDGET" hint="capacity"><Segment values={[6,10,14]} selected={config.cacheGb} onSelect={value=>update("cacheGb",value as CacheSize)} suffix="GB"/></Control>
+          <Control label="CONCURRENCY CAP" hint="queue pressure"><Segment values={[4,12,24]} selected={config.concurrency} onSelect={value=>update("concurrency",value as Concurrency)} prefix="C"/></Control>
+          <Toggle label="PREFIX CACHING" detail="Reuse the shared system prompt" checked={config.prefixCache} onChange={value=>update("prefixCache",value)}/>
+          <Toggle label="SPECULATIVE DECODING" detail="Draft tokens, verify in parallel" checked={config.speculative} onChange={value=>update("speculative",value)}/>
+
+          <div className="prediction-block"><span>COMMIT YOUR PREDICTION</span><div><button className={prediction==="clear"?"selected":""} onClick={()=>setPrediction("clear")}>Queue clears</button><button className={prediction==="latency"?"selected":""} onClick={()=>setPrediction("latency")}>Latency fails</button><button className={prediction==="oom"?"selected":""} onClick={()=>setPrediction("oom")}>GPU OOMs</button></div></div>
+
+          <div className="run-actions"><button className="forecast-button" disabled={!prediction || running} onClick={()=>{setForecasted(true);setObserved(false)}}>{forecasted ? "REFRESH SYSTEM MODEL" : "SIMULATE OUTCOME"}</button><button className="deploy-button" disabled={!forecasted || running} onClick={()=>{runReplay();setAttempt(current=>current+1)}}>{running ? "REPLAYING TRACE…" : "RUN TRAFFIC REPLAY →"}</button></div>
+          <p className="truth-note"><i/> The system model forecasts first. The trace engine grades it against the workload.</p>
+        </aside>
+      </div>
     </section>}
   </main>;
 }
 
-function LockOverlay() { return <div className="control-lock"><span>◎</span><b>Lock a prediction to activate controls</b><small>Your first guess becomes part of the evidence trail.</small></div>; }
-
-function TitrationWorld({ state, addedMl, setAddedMl, tab, setTab, locked }: { state: ReturnType<typeof calculateTitration>; addedMl: number; setAddedMl: (n: number) => void; tab: WorldTab; setTab: (t: WorldTab) => void; locked: boolean }) {
-  const points = Array.from({ length: 16 }, (_, i) => calculateTitration(i * 3).pH);
-  return <div className="world-layout"><section className="world-canvas titration-canvas"><div className="view-tabs">{(["lab", "molecular", "curve", "equation"] as WorldTab[]).map(item => <button key={item} className={tab === item ? "active" : ""} onClick={() => setTab(item)}>{item}</button>)}</div>{tab === "lab" && <div className="lab-scene"><div className="lab-burette"><div style={{ height: `${Math.max(8, 76 - addedMl)}%` }}/><i/></div><div className="lab-probe"/><div className={`lab-beaker ${state.excess}`}><div className="liquid"/><span className="ions ion-a">H₃O⁺</span><span className="ions ion-b">OH⁻</span><span className="ions ion-c">H₂O</span></div><div className="live-chip">pH <strong>{state.pH.toFixed(2)}</strong></div></div>}{tab === "molecular" && <div className="molecular-scene"><p>Representative particles — not a literal particle count.</p><div className="molecule-field">{Array.from({length: state.excess === "none" ? 6 : 16}, (_,i) => <i className={state.excess === "hydroxide" ? "oh" : state.excess === "hydronium" ? "h3o" : "water"} key={i}>{state.excess === "hydroxide" ? "OH⁻" : state.excess === "hydronium" ? "H₃O⁺" : "H₂O"}</i>)}</div></div>}{tab === "curve" && <div className="curve-scene"><p>Live titration curve</p><div className="chart-grid">{points.map((point, i) => <i key={i} style={{ left: `${i * 6.1 + 3}%`, bottom: `${point * 5.4 + 5}%` }}/>)}</div><div className="axis-label">titrant added →</div></div>}{tab === "equation" && <div className="equation-scene"><span>1:1 neutralization</span><strong>n = M × V</strong><p>{(state.baseM * state.initialBaseMl / 1000).toFixed(4)} mol base initially</p><div>{state.excess === "none" ? "At equivalence: pH ≈ 7" : `Excess ${state.excess} controls the pH.`}</div></div>}</section><aside className={`control-panel ${locked ? "is-locked" : ""}`}>{locked && <LockOverlay/>}<p className="kicker">EXPERIMENT CONTROLS</p><h3>Add titrant</h3><div className="button-row"><button disabled={locked} onClick={() => setAddedMl(Math.min(50, addedMl + .05))}>+ one drop</button><button disabled={locked} onClick={() => setAddedMl(Math.min(50, addedMl + .5))}>+ 0.5 mL</button><button disabled={locked} onClick={() => setAddedMl(Math.min(50, addedMl + 1))}>+ 1 mL</button><button disabled={locked} className="jump-button" onClick={() => setAddedMl(24.95)}>Jump near equivalence</button></div><input disabled={locked} aria-label="Titrant volume" type="range" min="0" max="50" step="0.05" value={addedMl} onChange={e => setAddedMl(Number(e.target.value))}/><div className="metric-grid"><div><small>ADDED</small><b>{addedMl.toFixed(2)} mL</b></div><div><small>EQUIVALENCE</small><b>{state.equivalenceMl.toFixed(2)} mL</b></div><div><small>STATE</small><b>{state.excess === "none" ? "balanced" : `excess ${state.excess}`}</b></div><div><small>TOTAL VOLUME</small><b>{state.totalMl.toFixed(2)} mL</b></div></div><p className="model-note">Simplified strong acid–strong base model at 25 °C.</p></aside></div>;
+function Landing({onEnter}:{onEnter:()=>void}) {
+  return <section className="infra-home">
+    <div className="home-grid">
+      <div className="home-copy"><div className="home-kicker"><span>THE FLIGHT SIMULATOR FOR</span> AI INFRASTRUCTURE</div><h1>Break the stack.<br/><em>Learn why.</em></h1><p>Master LLM inference by fighting production incidents—not watching another architecture lecture.</p><div className="home-actions"><button onClick={onEnter}>ENTER THE INCIDENT <span>↗</span></button><small><i/> NO GPU REQUIRED · LIVE SYSTEM MODEL</small></div><div className="home-proof"><div><b>01</b><span>PREDICT</span><small>Commit to the failure mode</small></div><div><b>02</b><span>INTERVENE</span><small>Tune the serving stack</small></div><div><b>03</b><span>REPLAY</span><small>Watch the system respond</small></div><div><b>04</b><span>DIAGNOSE</span><small>Explain the bottleneck</small></div></div></div>
+      <div className="home-console" aria-label="Live AI inference infrastructure incident"><div className="console-top"><span>PRODUCTION / US-WEST-2</span><b><i/> INCIDENT ACTIVE</b></div><div className="console-alert"><span>P95 LATENCY</span><strong>14.82<small>s</small></strong><em>+1,184%</em></div><div className="console-chart"><div className="chart-target">SLO 4.00s</div>{[18,22,20,34,31,45,68,57,82,74,92,86,96,89,94,91].map((height,index)=><i key={index} style={{height:`${height}%`}}/> )}</div><div className="console-pipeline"><span>2.4 req/s</span><i>→</i><b>QUEUE <em>389</em></b><i>→</i><b>GPU <em>97%</em></b><i>→</i><span>79 tok/s</span></div><div className="console-rack"><div className="rack-chip"><small>NVIDIA</small><strong>A10G</strong><span>24 GB</span></div><div className="rack-memory"><span>VRAM</span><b>23.6 / 24 GB</b><i><em/></i></div><div className="rack-log"><span>12:04:18</span> decode capacity saturated<br/><span>12:04:19</span> queue depth +47<br/><span>12:04:21</span> p95 budget exceeded<br/><b>▮</b></div></div></div>
+    </div>
+    <div className="mission-ticker"><span>MISSION 01</span><b>THE LAUNCH-DAY INCIDENT</b><i/> Quantization <i/> Continuous batching <i/> KV cache <i/> Speculative decoding <button onClick={onEnter}>START →</button></div>
+  </section>;
 }
 
-function CircuitWorld({ voltage, resistance, closed, setVoltage, setResistance, setClosed, locked }: { voltage: number; resistance: number; closed: boolean; setVoltage: (v: number) => void; setResistance: (r: number) => void; setClosed: (v: boolean) => void; locked: boolean }) { const state = calculateCircuit(voltage, resistance, closed); return <div className="world-layout"><section className="world-canvas circuit-canvas"><div className={`circuit-drawing ${closed ? "on" : "off"}`}><div className="battery">+ <b>{voltage}V</b> −</div><div className="wire top-wire"/><div className="wire bottom-wire"/><button disabled={locked} className={`switch ${closed ? "closed" : ""}`} onClick={() => setClosed(!closed)} aria-label="Toggle circuit switch"><i/></button><div className="resistor">R<br/><b>{resistance}Ω</b></div><div className="bulb"><i style={{ opacity: 0.15 + state.brightness / 120 }}/><span>brightness {state.brightness}%</span></div>{closed && Array.from({length: 8}, (_,i) => <span className="charge" style={{ animationDelay: `${i * -.35}s` }} key={i}>+</span>)}</div><div className="circuit-equation">I = V / R <strong>{state.current.toFixed(2)} A</strong></div></section><aside className={`control-panel ${locked ? "is-locked" : ""}`}>{locked && <LockOverlay/>}<p className="kicker">EXPERIMENT CONTROLS</p><h3>Change the circuit</h3><label>Voltage <b>{voltage} V</b><input disabled={locked} aria-label="Voltage" type="range" min="0" max="12" value={voltage} onChange={e => setVoltage(Number(e.target.value))}/></label><label>Resistance <b>{resistance} Ω</b><input disabled={locked} aria-label="Resistance" type="range" min="1" max="12" value={resistance} onChange={e => setResistance(Number(e.target.value))}/></label><button disabled={locked} className="switch-button" onClick={() => setClosed(!closed)}>{closed ? "Open switch" : "Close switch"}</button><button disabled={locked} className="target-button" onClick={() => { setVoltage(9); setResistance(6); setClosed(true); }}>Try target: 1.50 A</button><div className="metric-grid"><div><small>CURRENT</small><b>{state.current.toFixed(2)} A</b></div><div><small>POWER</small><b>{state.power.toFixed(2)} W</b></div><div><small>FLOW</small><b>{closed ? "closed loop" : "open loop"}</b></div><div><small>MODEL</small><b>conceptual</b></div></div><p className="model-note">Animated charges represent conventional current, not electron drift speed.</p></aside></div>; }
-
-function StatisticsWorld({ values, outlier, setOutlier, mean, median, locked }: { values: number[]; outlier: number; setOutlier: (n:number) => void; mean: number; median: number; locked: boolean }) { return <div className="world-layout"><section className="world-canvas stats-canvas"><p className="eyebrow">EXPERIMENTAL PREVIEW</p><h2>Which center moves more?</h2><div className="dot-plot">{values.map((value, index) => <span key={index} className={index === values.length - 1 ? "outlier-dot" : ""} style={{ left: `${(value / 20) * 88 + 5}%` }}><i/>{value}</span>)}</div><div className="center-lines"><b style={{ left: `${mean / 20 * 88 + 5}%` }}>mean {mean.toFixed(1)}</b><b style={{ left: `${median / 20 * 88 + 5}%` }}>median {median.toFixed(1)}</b></div><p>Move the outlier, then compare how mean and median respond.</p></section><aside className={`control-panel ${locked ? "is-locked" : ""}`}>{locked && <LockOverlay/>}<p className="kicker">EXPERIMENT CONTROLS</p><h3>Move the outlier</h3><input disabled={locked} aria-label="Outlier value" type="range" min="1" max="20" value={outlier} onChange={e => setOutlier(Number(e.target.value))}/><button disabled={locked} className="target-button" onClick={() => setOutlier(20)}>Push it to the edge</button><div className="metric-grid"><div><small>OUTLIER</small><b>{outlier}</b></div><div><small>MEAN</small><b>{mean.toFixed(2)}</b></div><div><small>MEDIAN</small><b>{median.toFixed(2)}</b></div><div><small>STATUS</small><b>experimental</b></div></div><p className="model-note">Template-based learning preview. This is not a general statistics engine.</p></aside></div>; }
-
-function ConceptStudio({ analysis, connection, setConnection, observation, setObservation }: { analysis: AnalysisMeta; connection: string; setConnection: (value: string) => void; observation: string; setObservation: (value: string) => void }) {
-  return <section className="concept-studio"><div className="concept-studio-intro"><span className="eyebrow">INTERACTIVE CONCEPT STUDIO</span><h1>Make the claim<br/>testable.</h1><p>This is a guided reasoning space built from the source—not a made-up numerical simulation. Decide what you would vary, what you would observe, and what evidence could change your mind.</p><div className="source-chip">Grounded in: {analysis.title}</div></div><div className="concept-map"><p className="kicker">THE RELATIONSHIP TO EXPLORE</p><h2>{analysis.causalQuestion}</h2><div className="concept-nodes"><button className={connection ? "selected" : ""} onClick={() => setConnection("change")}><small>CHANGE</small><b>{analysis.primaryCause}</b></button><i>→</i><button className={connection ? "selected" : ""} onClick={() => setConnection("observe")}><small>OBSERVE</small><b>{analysis.primaryEffect}</b></button></div><div className={`evidence-prompt ${connection ? "ready" : ""}`}><b>{connection ? "Your evidence plan" : "Start with the relationship"}</b><p>{connection ? `What specific observation would show whether changing ${analysis.primaryCause.toLowerCase()} affects ${analysis.primaryEffect.toLowerCase()}?` : "Click either node to turn the source claim into a testable relationship."}</p>{connection && <textarea value={observation} onChange={event => setObservation(event.target.value)} placeholder="For example: I would compare… while keeping… the same."/>}</div><div className="misconception-card"><small>WATCH FOR THIS ASSUMPTION</small><strong>“{analysis.misconception}”</strong></div></div><aside className="concept-studio-next"><p className="kicker">WHAT HAPPENS NEXT</p><h3>Turn this map into a lab.</h3><p>A subject-specific lab can be added when its equations, assumptions, and feedback rules are verified. Until then, Learnscape keeps the distinction clear.</p><div><b>Now</b><span>Source → causal map → evidence plan</span></div><div><b>Next</b><span>Verified domain model → interactive lab</span></div></aside></section>;
-}
-
-type MissionAdaptation = { beliefs: PendulumBeliefs; experiment: AdaptiveExperiment; onPrepare: () => void } | null;
-
-function Mission({ kind, challengeIndex, missionStep, setMissionStep, prediction, setPrediction, confidence, setConfidence, evidenceChoice, setEvidenceChoice, hasExperimented, outcome, resultReviewed, setResultReviewed, explanation, setExplanation, transferChoice, setTransferChoice, missionComplete, setMissionComplete, score, achievement, onReset, onNextChallenge, adaptation }: { kind: string; challengeIndex: number; missionStep: number; setMissionStep: (n:number) => void; prediction: string; setPrediction: (v:string) => void; confidence: number; setConfidence: (n:number) => void; evidenceChoice: string; setEvidenceChoice: (v:string) => void; hasExperimented: boolean; outcome: string; resultReviewed: string; setResultReviewed: (v:string) => void; explanation: string; setExplanation: (t:string) => void; transferChoice: string; setTransferChoice: (v:string) => void; missionComplete: boolean; setMissionComplete: (v:boolean) => void; score:number; achievement:string; onReset:()=>void; onNextChallenge:()=>void; adaptation: MissionAdaptation }) {
-  const pendulumChallenges = [
-    { question: "Two pendulums begin together. One bob is three times heavier. Which reaches the center first?", predictions: ["The heavier bob", "They arrive together", "The lighter bob"], testTitle: "Run the mass swap.", testHelp: "Keep the cord and release angle fixed. Change only the bob's mass.", evidenceQuestion: "What did the mass test show?", evidenceAnswers: ["The heavier bob arrived first", "They arrived together", "The lighter bob arrived first"], evidenceCorrect: "They arrived together", transfer: "To make an ideal pendulum take longer for one swing, you should…", answers: ["increase its mass", "shorten the cord", "lengthen the cord"], correct: "lengthen the cord", rule: "Changing mass does not change the ideal period." },
-    { question: "Two pendulums use equal bobs. One cord is longer. Which takes longer for one swing?", predictions: ["The longer cord", "They take the same time", "The shorter cord"], testTitle: "Stretch the cord.", testHelp: "Keep the bob and release angle fixed. Change only the cord length.", evidenceQuestion: "What did the length test show?", evidenceAnswers: ["The longer cord took longer", "They took the same time", "The shorter cord took longer"], evidenceCorrect: "The longer cord took longer", transfer: "If gravity were weaker while the cord stays the same, the period would…", answers: ["become shorter", "stay the same", "become longer"], correct: "become longer", rule: "A longer cord makes the ideal period longer." },
-  ];
-  const pendulumChallenge = pendulumChallenges[challengeIndex] ?? pendulumChallenges[0];
-  const content = kind === "pendulum_world" ? pendulumChallenge : kind === "acid_base_titration" ? { question: "What will happen as acid approaches the equivalence volume?", predictions: ["The pH will fall at a steady rate", "The pH change will suddenly become much larger", "The pH will stay basic after equivalence"], transfer: "If the base concentration doubles but its volume stays the same, the equivalence volume should…", answers: ["halve", "stay the same", "double"], correct: "double", testTitle: "Approach equivalence.", testHelp: "Change one variable and observe the result.", evidenceQuestion: "What did the titration test show near equivalence?", evidenceAnswers: ["A small steady change", "A sharp change in pH", "No meaningful change"], evidenceCorrect: "A sharp change in pH", rule: "Near equivalence, small additions can cause a large pH change." } : kind === "ohms_law_circuit" ? { question: "If voltage doubles while resistance stays fixed, what happens to current?", predictions: ["Current halves", "Current stays the same", "Current doubles"], transfer: "If both voltage and resistance double, current should…", answers: ["halve", "stay the same", "double"], correct: "stay the same", testTitle: "Raise the voltage.", testHelp: "Change one variable and observe the result.", evidenceQuestion: "What did the circuit test show when voltage increased?", evidenceAnswers: ["Current decreased", "Current stayed the same", "Current increased"], evidenceCorrect: "Current increased", rule: "Current rises with voltage when resistance is fixed." } : { question: "Which measure will move more when the outlier moves farther away?", predictions: ["The median", "The mean", "Both equally"], transfer: "For a highly skewed salary dataset, the more robust center is usually the…", answers: ["mean", "median", "range"], correct: "median", testTitle: "Move the outlier.", testHelp: "Change one value and observe the result.", evidenceQuestion: "What did moving the outlier show?", evidenceAnswers: ["The median moved more", "The mean moved more", "They moved equally"], evidenceCorrect: "The mean moved more", rule: "The mean is more sensitive to extreme values." };
-  const stages = ["Predict", "Test", "Explain"];
-  const visibleStep = missionStep === 1 ? 1 : missionStep < 4 ? 2 : 3;
-  const notebook = [prediction && `Prediction locked at ${confidence}% confidence`, hasExperimented && "A parameter was changed", resultReviewed && "Observed evidence was compared", explanation.trim().length >= 20 && "A causal explanation was recorded", transferChoice && "Transfer answer submitted"].filter(Boolean) as string[];
-  const lockPrediction = () => { adaptation?.onPrepare(); setMissionStep(2); };
-  if (missionComplete) return <section className="mission completion-shell"><div className="concept-passport challenge-completion"><div className="passport-mark">✓</div><div><p className="kicker">CHALLENGE {challengeIndex + 1} CLEARED</p><h2>You found the rule.</h2><p>{content.rule} You changed one thing, checked the evidence, and carried the rule into a new situation.</p><div className="stamp-row"><span>+{score} insight</span><span>Evidence streak · {challengeIndex + 1}</span>{achievement && <span>✦ {achievement}</span>}</div></div><div className="challenge-actions"><button className="primary-button" onClick={onNextChallenge}>{challengeIndex === 0 ? "Try the remix challenge" : "Play the challenge set again"} <span>→</span></button><button className="secondary-button" onClick={onReset}>Start this one over</button></div></div></section>;
-  return <section className="mission mission-v2"><div className="mission-card">
-    <nav className="mission-steps" aria-label="Mission progress">{stages.map((stage,i) => <span className={`${i + 1 === visibleStep ? "active" : ""} ${i + 1 < visibleStep ? "done" : ""}`} key={stage}><i>{i + 1 < visibleStep ? "✓" : i + 1}</i>{stage}</span>)}</nav>
-    {missionStep === 1 && <><p className="kicker">CHALLENGE {kind === "pendulum_world" ? `${challengeIndex + 1} OF 2` : "START"}</p><h2>{content.question}</h2><p className="mission-help">Pick a side before you touch the world. A wrong call is useful evidence.</p><div className="prediction-grid">{content.predictions.map(option => <button className={prediction === option ? "selected" : ""} onClick={() => setPrediction(option)} key={option}>{option}</button>)}</div><div className="confidence-choice"><span>How sure are you?</span>{[{value:50,label:"Not sure"},{value:80,label:"Pretty sure"},{value:100,label:"Certain"}].map(item => <button className={confidence === item.value ? "selected" : ""} onClick={() => setConfidence(item.value)} key={item.value}>{item.label}</button>)}</div><button className="primary-button" disabled={!prediction} onClick={lockPrediction}>Lock my call <span>→</span></button></>}
-    {missionStep === 2 && <><p className="kicker">ONE CLEAN TEST</p><h2>{content.testTitle}</h2><p className="mission-help">{content.testHelp}</p>{adaptation && <div className="adaptive-experiment prepared"><div><small>YOUR TEST</small><b>{adaptation.experiment.setup}</b></div><span>setup ready ✓</span></div>}<div className={`evidence-status ${hasExperimented ? "ready" : ""}`}><i>{hasExperimented ? "✓" : "○"}</i><div><b>{hasExperimented ? "The evidence is in" : "Run the prepared setup"}</b><span>{hasExperimented ? outcome : "Release the pendulum and watch only the variable you changed."}</span></div></div><button className="primary-button" disabled={!hasExperimented} onClick={() => setMissionStep(3)}>{hasExperimented ? "What did reality say?" : "Run it in the world"} <span>→</span></button></>}
-    {missionStep === 3 && <><p className="kicker">CALL THE RESULT</p><h2>{content.evidenceQuestion}</h2><p className="mission-help">Choose the statement that matches what you just saw.</p><div className="prediction-grid evidence-choices">{content.evidenceAnswers.map(answer => <button className={evidenceChoice === answer ? "selected" : ""} onClick={() => setEvidenceChoice(answer)} key={answer}>{answer}</button>)}</div><div className="compare-grid"><article><small>YOUR CALL · {confidence}%</small><b>{prediction}</b></article><article><small>THE OBSERVATION</small><b>{outcome}</b></article></div><button className="primary-button" disabled={!evidenceChoice} onClick={() => { setResultReviewed(evidenceChoice === content.evidenceCorrect ? "held" : "revised"); setMissionStep(4); }}>Make the rule portable <span>→</span></button></>}
-    {missionStep === 4 && <><p className="kicker">KEEP THE RULE</p><h2>Write what changes—and what does not.</h2><textarea value={explanation} onChange={e => setExplanation(e.target.value)} placeholder="Use the evidence: which variable changed, and what did it change?"/><div className="explanation-meter"><span style={{width:`${Math.min(100, explanation.trim().length * 3)}%`}}/><small>{explanation.trim().length < 20 ? "Name the variable and the effect" : "Now apply the rule in a new situation"}</small></div><div className="transfer-card"><b>{content.transfer}</b><div>{content.answers.map(answer => <button className={transferChoice === answer ? "selected" : ""} onClick={() => setTransferChoice(answer)} key={answer}>{answer}</button>)}</div>{transferChoice && transferChoice !== content.correct && <small className="transfer-feedback">That does not match the rule you just tested. Try again.</small>}</div><button className="primary-button" disabled={explanation.trim().length < 20 || transferChoice !== content.correct} onClick={() => setMissionComplete(true)}>Clear this challenge <span>✦</span></button></>}
-    <details className="mission-details"><summary>Learning evidence <span>for instructors</span></summary><div className="evidence-trail">{notebook.length ? notebook.map((item,i) => <p key={item}><i>{i+1}</i>{item}</p>) : <p>No evidence yet.</p>}</div>{adaptation && <div className="instructor-lens"><p>Current estimate based on the learner’s choices.</p>{(Object.entries(adaptation.beliefs) as [keyof PendulumBeliefs, number][]).sort((a,b) => b[1] - a[1]).map(([id,probability]) => <div className="belief-row" key={id}><span>{pendulumBeliefLabels[id]}</span><div><i style={{width:`${Math.round(probability * 100)}%`}}/></div><b>{Math.round(probability * 100)}%</b></div>)}<small>Next test: {adaptation.experiment.title}</small></div>}</details>
-  </div></section>;
-}
+function Slo({label,value,pass,active}:{label:string;value:string;pass:boolean;active:boolean}) { return <div className={`slo ${active?(pass?"pass":"fail"):""}`}><span>{label}</span><b>{value}</b><i>{active?(pass?"✓":"×"):"·"}</i></div>; }
+function Node({number,title,metric,alert,kind}:{number:string;title:string;metric:string;alert:boolean;kind:string}) { return <div className={`pipeline-node ${kind} ${alert?"alert":""}`}><span>{number}</span><div className="node-icon">{kind==="gpu"?"▦":kind==="scheduler"?"≋":kind==="stream"?"»":"⇥"}</div><b>{title}</b><small>{metric}</small></div>; }
+function Flow({active}:{active:boolean}) { return <div className={`pipeline-flow ${active?"active":""}`}><i/><i/><i/><span>→</span></div>; }
+function Metric({label,value,suffix,delta,danger}:{label:string;value:string;suffix?:string;delta:string;danger?:boolean}) { return <article className={danger?"danger":""}><span>{label}</span><strong>{value}<small>{suffix}</small></strong><em>{delta}</em></article>; }
+function Control({label,hint,children}:{label:string;hint:string;children:React.ReactNode}) { return <label className="control-group"><span>{label}<i>{hint}</i></span>{children}</label>; }
+function Segment({values,selected,onSelect,prefix="",suffix=""}:{values:(string|number)[];selected:string|number;onSelect:(value:string|number)=>void;prefix?:string;suffix?:string}) { return <div className="segment">{values.map(value=><button key={value} className={selected===value?"selected":""} onClick={()=>onSelect(value)}>{prefix}{value}{suffix}</button>)}</div>; }
+function Toggle({label,detail,checked,onChange}:{label:string;detail:string;checked:boolean;onChange:(value:boolean)=>void}) { return <button className={`infra-toggle ${checked?"on":""}`} onClick={()=>onChange(!checked)}><span><b>{label}</b><small>{detail}</small></span><i><em/></i></button>; }
