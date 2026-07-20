@@ -6,7 +6,7 @@ export const VideoRoot: React.FC = () => (
   <Composition
     id="P99Demo"
     component={P99Demo}
-    durationInFrames={3300}
+    durationInFrames={4800}
     fps={30}
     width={1920}
     height={1080}

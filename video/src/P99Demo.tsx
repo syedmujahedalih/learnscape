@@ -98,27 +98,26 @@ const Opening: React.FC<{ duration: number }> = ({ duration }) => {
   const { fps } = useVideoConfig();
   const enter = spring({ frame, fps, config: { damping: 17, stiffness: 82 } });
   const flash = interpolate(frame, [0, 5, 11], [1, 0.3, 0], { extrapolateRight: "clamp" });
-  const bar = interpolate(frame, [32, 115], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const stages = [["01", "LEARN", "Build the mental model"], ["02", "EXPERIMENT", "Change the serving stack"], ["03", "DIAGNOSE", "Read cause and effect"], ["04", "OPERATE", "Contain an incident"]];
   return (
     <AbsoluteFill style={{ background: `radial-gradient(circle at 72% 42%, #153f42, transparent 35%), ${bg}`, color: text, opacity: fade(frame, duration), overflow: "hidden" }}>
       <Grid />
-      <Chrome label="OPENAI BUILD WEEK · EDUCATION" />
+      <Chrome label="OPENAI BUILD WEEK · EDUCATION" status="LEARNED SURROGATE READY" />
       <div style={{ position: "absolute", left: 120, top: 245, opacity: enter, transform: `translateY(${(1 - enter) * 48}px)` }}>
-        <div style={{ color: cyan, font: "800 13px ui-monospace, monospace", letterSpacing: 4.5 }}>THE FLIGHT SIMULATOR FOR</div>
+        <div style={{ color: cyan, font: "800 13px ui-monospace, monospace", letterSpacing: 4.5 }}>THE INTERACTIVE PLAYGROUND FOR LLM SYSTEMS</div>
         <div style={{ marginTop: 26, font: "900 104px/.91 Inter, Arial", letterSpacing: -7, maxWidth: 1160 }}>
-          INFERENCE<br />
-          <span style={{ color: acid }}>ENGINEERS.</span>
+          LEARN INFERENCE<br />
+          <span style={{ color: acid }}>BY RUNNING IT.</span>
         </div>
         <div style={{ marginTop: 34, width: 790, color: "#a6b3bd", font: "400 26px/1.5 Inter, Arial" }}>
-          Fight production incidents. Predict the failure. Change the stack. Learn why the system moves.
+          Start with first principles. Explore the serving stack freely. Graduate to production pressure.
         </div>
       </div>
-      <div style={{ position: "absolute", right: 120, top: 255, width: 490, border: `1px solid ${line}`, borderRadius: 18, padding: 28, background: "rgba(7,11,16,.92)", boxShadow: "0 40px 100px rgba(0,0,0,.45)", opacity: enter }}>
-        <div style={{ display: "flex", justifyContent: "space-between", color: muted, font: "700 10px ui-monospace, monospace", letterSpacing: 1.8 }}><span>PRODUCTION / US-WEST-2</span><span style={{ color: red }}>● INCIDENT</span></div>
-        <div style={{ marginTop: 34, color: muted, font: "700 11px ui-monospace, monospace", letterSpacing: 1.4 }}>P95 LATENCY</div>
-        <div style={{ marginTop: 5, color: text, font: "800 70px ui-monospace, monospace", letterSpacing: -5 }}>14.82<span style={{ color: muted, fontSize: 24 }}>s</span></div>
-        <div style={{ marginTop: 16, height: 10, borderRadius: 3, background: "#202b35", overflow: "hidden" }}><div style={{ width: `${bar * 96}%`, height: "100%", background: `linear-gradient(90deg,${amber},${red})`, boxShadow: `0 0 18px ${red}` }} /></div>
-        <div style={{ marginTop: 15, color: red, font: "700 11px ui-monospace, monospace" }}>SLO 4.00s · +1,184%</div>
+      <div style={{ position: "absolute", right: 120, top: 230, width: 500, border: `1px solid ${line}`, borderRadius: 18, padding: 28, background: "rgba(7,11,16,.92)", boxShadow: "0 40px 100px rgba(0,0,0,.45)", opacity: enter }}>
+        <div style={{ display: "flex", justifyContent: "space-between", color: muted, font: "700 10px ui-monospace, monospace", letterSpacing: 1.8 }}><span>LEARNING PATH</span><span style={{ color: acid }}>● READY</span></div>
+        <div style={{ display: "grid", gap: 1, marginTop: 25, background: line }}>
+          {stages.map(([id, title, copy], index) => <div key={id} style={{ minHeight: 103, padding: "17px 18px", display: "grid", gridTemplateColumns: "45px 1fr", alignItems: "center", background: "#0a1016" }}><span style={{ color: index === 3 ? acid : "#52616d", font: "800 10px ui-monospace, monospace" }}>{id}</span><div><b style={{ display: "block", color: index === 3 ? acid : text, font: "850 15px ui-monospace, monospace", letterSpacing: 1 }}>{title}</b><small style={{ display: "block", marginTop: 7, color: muted, font: "500 13px Inter, Arial" }}>{copy}</small></div></div>)}
+        </div>
       </div>
       <div style={{ position: "absolute", inset: 0, background: `rgba(255,255,255,${flash})`, pointerEvents: "none" }} />
       <Scanlines />
@@ -163,7 +162,7 @@ const ProductScene: React.FC<ProductSceneProps> = ({ duration, image, step, titl
           transform: `translateY(${(1 - enter) * 25}px) scale(${camera})`,
         }}
       >
-        <Img src={staticFile(`p99/${image}`)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <Img src={staticFile(`p99-v2/${image}`)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 235, background: "linear-gradient(transparent, rgba(4,7,11,.96) 44%)" }} />
         <div style={{ position: "absolute", left: 44, right: 44, bottom: 34, display: "grid", gridTemplateColumns: "1.1fr 1fr", alignItems: "end", gap: 70 }}>
           <div>
@@ -265,19 +264,48 @@ const CloudScene: React.FC<{ duration: number }> = ({ duration }) => {
   );
 };
 
+const BoundaryScene: React.FC<{ duration: number }> = ({ duration }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const enter = spring({ frame, fps, config: { damping: 17, stiffness: 84 } });
+  const cards = [
+    ["01", "REAL LEARNED MODEL", "A compact recursive next-state network predicts six serving-system variables.", acid],
+    ["02", "BOOTSTRAP TRACES", "The current training corpus comes from internally consistent reference dynamics.", amber],
+    ["03", "MEASURED DATA PATH", "An optional Modal and llama.cpp runner can capture real GPU traces for retraining.", cyan],
+  ] as const;
+  return (
+    <AbsoluteFill style={{ background: `radial-gradient(circle at 50% 48%, #163633, transparent 40%), ${bg}`, color: text, opacity: fade(frame, duration), overflow: "hidden" }}>
+      <Grid />
+      <Chrome label="SCIENTIFIC BOUNDARY" status="PROVENANCE VISIBLE" />
+      <div style={{ position: "absolute", left: 120, right: 120, top: 180, opacity: enter }}>
+        <div style={{ color: amber, font: "900 12px ui-monospace, monospace", letterSpacing: 3.5 }}>NO BLACK-BOX CLAIMS</div>
+        <div style={{ marginTop: 22, maxWidth: 1300, font: "850 64px/.98 Inter, Arial", letterSpacing: -3.8 }}>A real learned surrogate.<br/><span style={{ color: acid }}>An honest data boundary.</span></div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 15, marginTop: 68 }}>
+          {cards.map(([id, title, copy, color], index) => {
+            const item = spring({ frame: frame - index * 13, fps, config: { damping: 17, stiffness: 96 } });
+            return <article key={id} style={{ minHeight: 300, padding: 30, border: `1px solid ${color}55`, borderRadius: 15, background: "rgba(8,13,19,.92)", opacity: item, transform: `translateY(${(1-item)*30}px)` }}><span style={{ display: "block", color, font: "900 11px ui-monospace, monospace", letterSpacing: 2 }}>{id}</span><b style={{ display: "block", marginTop: 48, font: "850 24px/1.1 Inter, Arial" }}>{title}</b><p style={{ margin: "22px 0 0", color: "#98a6b0", font: "450 18px/1.55 Inter, Arial" }}>{copy}</p></article>;
+          })}
+        </div>
+        <div style={{ marginTop: 38, color: "#85939e", font: "750 12px ui-monospace, monospace", letterSpacing: 1.4 }}>FORECAST → INDEPENDENT TRACE → FUTURE MEASURED CORPUS</div>
+      </div>
+      <Scanlines />
+    </AbsoluteFill>
+  );
+};
+
 const CodexScene: React.FC<{ duration: number }> = ({ duration }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const enter = spring({ frame, fps, config: { damping: 17, stiffness: 82 } });
-  const tasks = ["PRESSURE-TEST THE WEDGE", "PIVOT TO INFERENCE ENGINEERING", "IMPLEMENT WORLD MODEL", "BUILD MODAL TRACE RUNNER", "TEST · DOCUMENT · DEPLOY"];
+  const tasks = ["PRESSURE-TEST THE ORIGINAL IDEA", "PIVOT TO INFERENCE EDUCATION", "IMPLEMENT THE LEARNED ROLLOUT", "BUILD THE INTERACTIVE PLATFORM", "TEST · DOCUMENT · DEPLOY", "KEEP BUILDING FROM MY PHONE"];
   return (
     <AbsoluteFill style={{ background: `radial-gradient(circle at 24% 48%, #173a37, transparent 34%), ${bg}`, color: text, opacity: fade(frame, duration), overflow: "hidden" }}>
       <Grid />
-      <Chrome label="TECHNOLOGICAL IMPLEMENTATION" status="CODEX + GPT-5.6" />
+      <Chrome label="BUILT WITH CODEX + GPT-5.6" status="DESKTOP + PHONE" />
       <div style={{ position: "absolute", left: 120, top: 220, width: 710, opacity: enter }}>
-        <div style={{ color: acid, font: "900 13px ui-monospace, monospace", letterSpacing: 3.6 }}>BUILT WITH CODEX + GPT-5.6</div>
-        <div style={{ marginTop: 25, font: "850 70px/.96 Inter, Arial", letterSpacing: -4.3 }}>From product pivot<br/>to deployed system.</div>
-        <div style={{ marginTop: 32, width: 650, color: "#a5b2bc", font: "450 22px/1.55 Inter, Arial" }}>Codex was the engineering collaborator across architecture, implementation, scientific boundaries, testing, and deployment.</div>
+        <div style={{ color: acid, font: "900 13px ui-monospace, monospace", letterSpacing: 3.6 }}>OPENAI BUILD WEEK</div>
+        <div style={{ marginTop: 25, font: "850 70px/.96 Inter, Arial", letterSpacing: -4.3 }}>Built wherever<br/>the work moved.</div>
+        <div style={{ marginTop: 32, width: 650, color: "#a5b2bc", font: "450 22px/1.55 Inter, Arial" }}>Codex with GPT-5.6 helped shape the product, implement the system, test it, and deploy it. I continued the same build from desktop and phone.</div>
       </div>
       <div style={{ position: "absolute", left: 990, right: 120, top: 185, padding: 29, border: `1px solid ${line}`, borderRadius: 15, background: "rgba(7,12,17,.92)", boxShadow: "0 35px 100px rgba(0,0,0,.45)" }}>
         <div style={{ display: "flex", gap: 8, marginBottom: 26 }}><i style={{ width: 9, height: 9, borderRadius: 99, background: red }}/><i style={{ width: 9, height: 9, borderRadius: 99, background: amber }}/><i style={{ width: 9, height: 9, borderRadius: 99, background: acid }}/></div>
@@ -285,7 +313,7 @@ const CodexScene: React.FC<{ duration: number }> = ({ duration }) => {
           const item = spring({ frame: frame - index * 11, fps, config: { damping: 17, stiffness: 100 } });
           return <div key={task} style={{ minHeight: 91, display: "grid", gridTemplateColumns: "38px 1fr auto", gap: 15, alignItems: "center", borderTop: index ? "1px solid #1d2932" : undefined, opacity: item, transform: `translateX(${(1-item)*30}px)` }}><span style={{ color: "#3f515e", font: "700 11px ui-monospace, monospace" }}>{String(index+1).padStart(2,"0")}</span><b style={{ font: "800 13px ui-monospace, monospace", letterSpacing: 1.2 }}>{task}</b><span style={{ color: acid, font: "900 12px ui-monospace, monospace" }}>✓</span></div>;
         })}
-        <div style={{ marginTop: 22, padding: "14px 16px", borderRadius: 7, background: "#101a22", color: cyan, font: "700 11px ui-monospace, monospace", letterSpacing: 1 }}>6 TESTS PASSING · PRODUCTION BUILD · CODEX SITE LIVE</div>
+        <div style={{ marginTop: 22, padding: "14px 16px", borderRadius: 7, background: "#101a22", color: cyan, font: "700 11px ui-monospace, monospace", letterSpacing: 1 }}>GPT-5.6 FOR CORE PRODUCT + ENGINEERING WORK · NOT JUST COPY</div>
       </div>
       <Scanlines />
     </AbsoluteFill>
@@ -301,8 +329,8 @@ const Closing: React.FC<{ duration: number }> = ({ duration }) => {
       <Grid />
       <div style={{ opacity: enter, transform: `translateY(${(1-enter)*42}px)` }}>
         <div style={{ width: "fit-content", margin: "0 auto 38px" }}><P99Mark /></div>
-        <div style={{ font: "900 86px/.92 Inter, Arial", letterSpacing: -5.5 }}>BREAK THE STACK.<br/><span style={{ color: acid }}>LEARN WHY.</span></div>
-        <div style={{ marginTop: 33, color: "#aab8c2", font: "450 24px Inter, Arial" }}>Predict · Intervene · Roll out · Validate</div>
+        <div style={{ font: "900 86px/.92 Inter, Arial", letterSpacing: -5.5 }}>LEARN INFERENCE.<br/><span style={{ color: acid }}>BY RUNNING IT.</span></div>
+        <div style={{ marginTop: 33, color: "#aab8c2", font: "450 24px Inter, Arial" }}>Foundations · Playground · Production incidents</div>
         <div style={{ marginTop: 62, display: "inline-flex", alignItems: "center", gap: 15, padding: "16px 23px", border: `1px solid ${line}`, borderRadius: 8, background: "rgba(7,12,17,.85)", color: cyan, font: "800 13px ui-monospace, monospace", letterSpacing: 1.2 }}><span style={{ width: 7, height: 7, borderRadius: 99, background: acid, boxShadow: `0 0 14px ${acid}` }}/> LIVE DEMO · learnscape-education.syedmujahedalih.chatgpt.site</div>
       </div>
       <Scanlines />
@@ -313,30 +341,28 @@ const Closing: React.FC<{ duration: number }> = ({ duration }) => {
 type Caption = { from: number; duration: number; text: string; hot: string[]; accent?: string };
 
 const captions: Caption[] = [
-  { from: 22, duration: 82, text: "LEARN INFERENCE BEFORE PRODUCTION BURNS", hot: ["PRODUCTION", "BURNS"], accent: red },
-  { from: 106, duration: 74, text: "P99 IS A FLIGHT SIMULATOR", hot: ["P99", "SIMULATOR"] },
-  { from: 190, duration: 94, text: "TRAFFIC JUST JUMPED 6×", hot: ["6×"], accent: red },
-  { from: 286, duration: 104, text: "REQUESTS PILE UP. THE GPU SATURATES.", hot: ["PILE", "SATURATES."], accent: red },
-  { from: 394, duration: 108, text: "THE LATENCY TARGET IS GONE", hot: ["GONE"], accent: red },
-  { from: 514, duration: 118, text: "PROTECT FIVE SLOs AT ONCE", hot: ["FIVE", "SLOs"] , accent: amber},
-  { from: 636, duration: 188, text: "PREDICT FIRST. THEN INTERVENE.", hot: ["PREDICT", "INTERVENE."] },
-  { from: 850, duration: 112, text: "THIS IS THE TECHNICAL CORE", hot: ["TECHNICAL", "CORE"], accent: cyan },
-  { from: 966, duration: 132, text: "CURRENT STATE → NEXT STATE", hot: ["NEXT", "STATE"], accent: cyan },
-  { from: 1102, duration: 142, text: "FEED IT BACK IN. ROLL FORWARD AGAIN.", hot: ["ROLL", "FORWARD"] },
-  { from: 1272, duration: 112, text: "DEMAND > DECODE CAPACITY", hot: ["DEMAND", "CAPACITY"], accent: red },
-  { from: 1388, duration: 128, text: "THE QUEUE KEEPS GROWING", hot: ["KEEPS", "GROWING"], accent: red },
-  { from: 1542, duration: 102, text: "SWITCH TO 4-BIT WEIGHTS", hot: ["4-BIT"], accent: cyan },
-  { from: 1648, duration: 106, text: "BATCH + REUSE THE PREFIX", hot: ["BATCH", "PREFIX"], accent: cyan },
-  { from: 1758, duration: 116, text: "ENABLE SPECULATIVE DECODING", hot: ["SPECULATIVE"], accent: cyan },
-  { from: 1902, duration: 138, text: "THE MODEL PREDICTS: QUEUE CLEARS", hot: ["QUEUE", "CLEARS"] },
-  { from: 2044, duration: 158, text: "BUT IT DOESN'T GRADE ITSELF", hot: ["DOESN'T", "ITSELF"], accent: amber },
-  { from: 2228, duration: 112, text: "A REFERENCE TRACE CHECKS IT", hot: ["REFERENCE", "TRACE"] },
-  { from: 2344, duration: 158, text: "100 / 100 · INCIDENT CONTAINED", hot: ["100", "CONTAINED"] },
-  { from: 2530, duration: 112, text: "IS IT A REAL WORLD MODEL?", hot: ["REAL", "WORLD", "MODEL?"], accent: amber },
-  { from: 2646, duration: 156, text: "REAL LEARNED SURROGATE. BOOTSTRAP DATA.", hot: ["SURROGATE.", "BOOTSTRAP"], accent: amber },
-  { from: 2828, duration: 112, text: "NEXT: MEASURED GPU TRACES", hot: ["MEASURED", "GPU", "TRACES"], accent: cyan },
-  { from: 2944, duration: 154, text: "MODAL → LLAMA.CPP → TELEMETRY", hot: ["TELEMETRY"], accent: cyan },
-  { from: 3120, duration: 168, text: "BREAK THE STACK. LEARN WHY.", hot: ["LEARN", "WHY."] },
+  { from: 18, duration: 150, text: "LEARN INFERENCE BY RUNNING IT", hot: ["RUNNING", "IT"] },
+  { from: 220, duration: 170, text: "FROM FIRST PRINCIPLES TO PRODUCTION", hot: ["FIRST", "PRODUCTION"], accent: cyan },
+  { from: 585, duration: 185, text: "SIX FOCUSED FOUNDATION LABS", hot: ["SIX", "FOUNDATION"] },
+  { from: 790, duration: 180, text: "PREDICT. CHANGE ONE VARIABLE. EXPLAIN WHY.", hot: ["PREDICT.", "WHY."] },
+  { from: 1010, duration: 210, text: "FEEDBACK BUILDS THE MENTAL MODEL", hot: ["MENTAL", "MODEL"] },
+  { from: 1280, duration: 195, text: "FREE PLAYGROUND. NO PRESCRIBED ANSWER.", hot: ["FREE", "PLAYGROUND."] },
+  { from: 1490, duration: 195, text: "CHANGE THE STACK. WATCH CAUSE BECOME EFFECT.", hot: ["CAUSE", "EFFECT."] },
+  { from: 1730, duration: 195, text: "CURRENT STATE → NEXT STATE", hot: ["NEXT", "STATE"], accent: cyan },
+  { from: 1940, duration: 190, text: "RECURSIVE THIRTY-SECOND ROLLOUT", hot: ["RECURSIVE", "ROLLOUT"], accent: cyan },
+  { from: 2180, duration: 170, text: "THEN PRODUCTION PRESSURE", hot: ["PRODUCTION", "PRESSURE"], accent: red },
+  { from: 2360, duration: 145, text: "PROTECT FIVE SLOs AT ONCE", hot: ["FIVE", "SLOs"], accent: amber },
+  { from: 2540, duration: 170, text: "COMMIT A PREDICTION", hot: ["PREDICTION"] },
+  { from: 2720, duration: 195, text: "CHANGE THE SERVING STACK", hot: ["SERVING", "STACK"], accent: cyan },
+  { from: 2960, duration: 185, text: "LEARNED FORECAST FIRST", hot: ["FORECAST", "FIRST"] },
+  { from: 3160, duration: 185, text: "THE MODEL DOES NOT GRADE ITSELF", hot: ["NOT", "ITSELF"], accent: amber },
+  { from: 3380, duration: 180, text: "INDEPENDENT REFERENCE TRACE", hot: ["INDEPENDENT", "TRACE"] },
+  { from: 3570, duration: 180, text: "100 / 100 · INCIDENT CONTAINED", hot: ["100", "CONTAINED"] },
+  { from: 3800, duration: 180, text: "REAL SURROGATE. VISIBLE BOUNDARY.", hot: ["REAL", "VISIBLE"], accent: amber },
+  { from: 3990, duration: 170, text: "OPTIONAL PATH TO MEASURED GPU TRACES", hot: ["MEASURED", "GPU", "TRACES"], accent: cyan },
+  { from: 4220, duration: 175, text: "BUILT WITH CODEX + GPT-5.6", hot: ["CODEX", "GPT-5.6"] },
+  { from: 4410, duration: 165, text: "DESKTOP OR PHONE. KEEP BUILDING.", hot: ["PHONE.", "BUILDING."] },
+  { from: 4610, duration: 175, text: "TRY P99 LIVE", hot: ["P99", "LIVE"] },
 ];
 
 const KineticCaption: React.FC<Omit<Caption, "from">> = ({ duration, text: caption, hot, accent = acid }) => {
@@ -363,18 +389,20 @@ const CaptionTrack: React.FC = () => <>{captions.map(caption => <Sequence key={c
 export const P99Demo: React.FC = () => (
   <AbsoluteFill style={{ background: bg }}>
     <Audio src={staticFile("audio/p99-voiceover.m4a")} volume={1} />
-    <Audio src={staticFile("audio/p99-ambient.m4a")} volume={0.7} />
-    <Sequence from={0} durationInFrames={180}><Opening duration={180}/></Sequence>
-    <Sequence from={180} durationInFrames={330}><ProductScene duration={330} image="01-home.png" step="THE PROBLEM" title="Production is a brutal classroom." copy="Inference engineers need causal intuition before a real launch turns into an expensive lesson." accent={red} focus={{x:1385,y:330,label:"P95 · 14.82s"}}/></Sequence>
-    <Sequence from={510} durationInFrames={330}><ProductScene duration={330} image="02-incident.png" step="MISSION 01" title="Five constraints. One intervention." copy="Latency, throughput, VRAM, quality, and cost move together. The learner must protect all five." accent={amber} focus={{x:195,y:410,label:"THE SLO ENVELOPE"}}/></Sequence>
-    <Sequence from={840} durationInFrames={420}><WorldModelScene duration={420}/></Sequence>
-    <Sequence from={1260} durationInFrames={270}><ProductScene duration={270} image="03-baseline-rollout.png" step="PREDICT" title="The baseline collapses." copy="Incoming token demand outruns decode capacity. Queue growth becomes the lesson—not a tooltip." accent={red} focus={{x:810,y:260,label:"389 QUEUED"}}/></Sequence>
-    <Sequence from={1530} durationInFrames={360}><ProductScene duration={360} image="04-intervention.png" step="INTERVENE" title="Change the serving stack." copy="INT4, continuous batching, prefix reuse, and speculative decoding reshape the system dynamics." accent={cyan} focus={{x:1600,y:455,label:"TUNE THE STACK"}}/></Sequence>
-    <Sequence from={1890} durationInFrames={330}><ProductScene duration={330} image="05-success-forecast.png" step="ROLL OUT" title="Forecast before validation." copy="The learned model predicts a stable state. Its answer is visible—but it does not grade itself." accent={acid} focus={{x:840,y:810,label:"LEARNED SURROGATE"}}/></Sequence>
-    <Sequence from={2220} durationInFrames={300}><ProductScene duration={300} image="07-contained.png" step="VALIDATE" title="Reality gets the final vote." copy="An independent reference trace clears every SLO: 2.66-second p95, 274 tokens per second, 100 out of 100." accent={acid} focus={{x:1040,y:855,label:"INCIDENT CONTAINED"}}/></Sequence>
-    <Sequence from={2520} durationInFrames={300}><CloudScene duration={300}/></Sequence>
-    <Sequence from={2820} durationInFrames={300}><CodexScene duration={300}/></Sequence>
-    <Sequence from={3120} durationInFrames={180}><Closing duration={180}/></Sequence>
+    <Audio src={staticFile("audio/p99-ambient.m4a")} loop volume={0.45} />
+    <Sequence from={0} durationInFrames={210}><Opening duration={210}/></Sequence>
+    <Sequence from={210} durationInFrames={360}><ProductScene duration={360} image="01-home.png" step="THE PLATFORM" title="One path from basics to production." copy="Foundations build the vocabulary. The playground builds intuition. Incidents test whether it transfers." accent={cyan} focus={{x:500,y:330,label:"LEARN BY RUNNING"}}/></Sequence>
+    <Sequence from={570} durationInFrames={420}><ProductScene duration={420} image="02-foundations.png" step="FOUNDATIONS" title="Build the mental model." copy="Six short, visual labs isolate tail latency, batching, KV cache, quantization, concurrency, and speculative decoding." accent={acid} focus={{x:1350,y:560,label:"PREDICT FIRST"}}/></Sequence>
+    <Sequence from={990} durationInFrames={270}><ProductScene duration={270} image="03-foundation-result.png" step="ACTIVE LEARNING" title="Change one variable. Explain why." copy="Immediate causal feedback connects the intervention to the system response." accent={acid} focus={{x:1180,y:670,label:"WHAT CHANGED"}}/></Sequence>
+    <Sequence from={1260} durationInFrames={450}><ProductScene duration={450} image="04-playground.png" step="FREE PLAYGROUND" title="Explore without a prescribed answer." copy="Every serving control updates the queue trajectory, SLO readout, and a plain-language causal explanation." accent={cyan} focus={{x:1060,y:500,label:"30-SECOND ROLLOUT"}}/></Sequence>
+    <Sequence from={1710} durationInFrames={450}><WorldModelScene duration={450}/></Sequence>
+    <Sequence from={2160} durationInFrames={360}><ProductScene duration={360} image="06-incident.png" step="PRODUCTION INCIDENT" title="Now protect five constraints at once." copy="Latency, throughput, VRAM, quality, and cost turn the mental model into an operational challenge." accent={red} focus={{x:180,y:510,label:"THE SLO ENVELOPE"}}/></Sequence>
+    <Sequence from={2520} durationInFrames={420}><ProductScene duration={420} image="07-incident-configured.png" step="PREDICT + INTERVENE" title="Commit before seeing the answer." copy="INT4, continuous batching, prefix reuse, and speculative decoding reshape the serving dynamics." accent={cyan} focus={{x:1580,y:560,label:"CHANGE THE STACK"}}/></Sequence>
+    <Sequence from={2940} durationInFrames={420}><ProductScene duration={420} image="08-world-model-forecast.png" step="LEARNED FORECAST" title="The queue is predicted to clear." copy="The recursive rollout clears the SLO envelope, but the learned model still does not grade itself." accent={acid} focus={{x:820,y:430,label:"FORECAST FIRST"}}/></Sequence>
+    <Sequence from={3360} durationInFrames={420}><ProductScene duration={420} image="09-reference-validated.png" step="VALIDATE" title="An independent trace checks the claim." copy="The reference engine reaches 2.66-second p95, 274 tokens per second, and a 100 out of 100 score." accent={acid} focus={{x:920,y:760,label:"INCIDENT CONTAINED"}}/></Sequence>
+    <Sequence from={3780} durationInFrames={420}><BoundaryScene duration={420}/></Sequence>
+    <Sequence from={4200} durationInFrames={390}><CodexScene duration={390}/></Sequence>
+    <Sequence from={4590} durationInFrames={210}><Closing duration={210}/></Sequence>
     <CaptionTrack/>
   </AbsoluteFill>
 );

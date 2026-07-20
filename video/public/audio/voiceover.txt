@@ -1,27 +1,23 @@
-Most people learn inference engineering the worst possible way: after latency catches fire in production.
+Most people learn inference engineering from diagrams, benchmark tables, or after latency is already failing in production.
 
-P ninety nine is a flight simulator for L L M systems.
+I built P ninety-nine to make that learning active.
 
-You start inside a launch-day incident. Traffic jumped six times. Requests are piling up, the GPU is saturated, and the service is missing its latency target.
+It is an interactive playground for understanding how L L M serving systems behave. A learner can start with six focused foundation labs covering tail latency, batching, the K V cache, quantization, concurrency, and speculative decoding.
 
-Your job is to protect five things at the same time: latency, throughput, memory, quality, and cost.
+Each lab asks for a prediction, changes one variable, and explains the result. Here, prefix caching reduces repeated prefill work, so time to first token moves before decode throughput does.
 
-First, make a prediction. Then change the serving stack. You can adjust weight precision, batching, the K V cache, concurrency, prefix caching, and speculative decoding.
+Then the learner enters the free playground. There is no score and no prescribed answer. Change precision, batch size, cache capacity, or concurrency, and the system rolls forward for thirty seconds. The queue, latency, throughput, and memory respond together, with a plain-language explanation of why.
 
-Here is the important technical part.
+Behind that interaction is a compact learned next-state model. It takes the serving configuration, workload, and current system state, then predicts the next queue depth, active requests, V RAM, utilization, throughput, and tail latency. Each prediction becomes the input to the next step.
 
-P ninety nine uses a small learned dynamics model. It takes the current system state and predicts the next one: the queue, active requests, memory, utilization, throughput, and tail latency. Then it feeds that prediction back in and rolls forward again.
+Once the mental model is built, P ninety-nine turns up the pressure. In the production incident, traffic has jumped six times and five constraints must be protected at once.
 
-The baseline fails because incoming demand is higher than decode capacity. The queue keeps growing.
+I predict the queue will clear, switch to four-bit weights, batch requests, reuse the shared prefix, and enable speculative decoding.
 
-Now I switch to four-bit weights, batch requests together, reuse the shared prefix, and enable speculative decoding.
+The learned model forecasts a healthy system. But it does not grade itself. A separate deterministic reference trace checks the same configuration. The measured result clears every service objective and contains the incident with a score of one hundred out of one hundred.
 
-The learned model predicts that the queue will clear. Then a separate reference trace checks the answer. Latency drops below four seconds, throughput clears demand, and the incident scores one hundred out of one hundred.
+The scientific boundary is visible in the product. The current network is a real learned surrogate trained on bootstrap traces, not a production hardware oracle. An optional Modal and llama C plus plus path can collect real G P U traces for future training.
 
-So, is this a real world model? It is a real learned next-state surrogate. But today, it is trained on bootstrap traces from our reference simulator, not measurements from real GPUs. P ninety nine says that clearly.
+I built P ninety-nine during Open A I Build Week with Codex and G P T five point six. I used Codex on my desktop and from my phone to pressure-test the original idea, pivot to inference education, design the system, implement the model and interface, write tests, document the limitations, and deploy the public site. G P T five point six powered the core product and engineering work through Codex, not just the copy.
 
-The next data layer is already built: an authenticated Modal worker can launch a temporary GPU, run llama C plus plus, and collect real telemetry for retraining.
-
-Codex with GPT five point six helped me pressure-test the idea, pivot the product, implement the model and trace runner, write the tests, and deploy the experience.
-
-P ninety nine lets you break the stack safely, then understand why.
+P ninety-nine lets you learn inference by running it.

@@ -2,13 +2,15 @@
 
 ## Title
 
-P99 — The Flight Simulator for Inference Engineers | OpenAI Build Week
+P99 | Learn LLM Inference by Running It | OpenAI Build Week
 
 ## Description
 
-P99 turns LLM inference engineering into a playable production incident.
+P99 is an interactive playground for learning LLM inference engineering.
 
-Instead of memorizing architecture diagrams, learners predict a failure mode, tune precision, batching, KV cache, concurrency, prefix caching, and speculative decoding, then watch a learned next-state world model roll the system forward. An independent trace validates the forecast.
+Start with focused foundation labs, experiment freely with the serving stack, then graduate to production incidents. Change precision, batching, KV cache, concurrency, prefix caching, and speculative decoding while watching queue depth, latency, throughput, and GPU memory respond.
+
+A compact learned next-state model rolls the system forward. An independent reference trace validates the forecast, and the product labels the provenance of every result.
 
 Built for the OpenAI Build Week Education track with Codex and GPT-5.6.
 
@@ -16,7 +18,7 @@ Try P99: https://learnscape-education.syedmujahedalih.chatgpt.site
 
 Source: https://github.com/syedmujahedalih/learnscape
 
-The checked-in model is trained on a labeled bootstrap trace corpus and is explicitly identified as such. The implemented Modal/llama.cpp path is designed to collect measured GPU traces for retraining.
+The checked-in model is trained on a labeled bootstrap trace corpus and is explicitly identified as such. The optional Modal and llama.cpp path is designed to collect measured GPU traces for retraining.
 
 #OpenAI #BuildWeek #Codex #InferenceEngineering #LLM #AIEducation
 
