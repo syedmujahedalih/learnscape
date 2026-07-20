@@ -1,10 +1,18 @@
 # P99
 
-**The flight simulator for inference engineers.** P99 teaches LLM serving through production incidents. Learners predict a failure mode, tune the stack, roll the system forward with a learned next-state model, and validate the forecast against either a reference trace or an ephemeral GPU benchmark.
+**Learn inference engineering by running it.** P99 is an interactive playground for understanding LLM serving systems. Learners build the fundamentals through focused experiments, explore the serving stack freely, and graduate to production incidents powered by a learned next-state model.
 
 [Try the deployed incident lab](https://learnscape-education.syedmujahedalih.chatgpt.site)
 
 P99 is an OpenAI Build Week Education-track project built for students and engineers learning to operate production AI infrastructure. Instead of separating quantization, batching, caching, and decoding into passive lessons, it makes their interaction the curriculum.
+
+## Learning experience
+
+- **Foundations:** six beginner-friendly, one-variable labs covering tail latency, continuous batching, KV cache, quantization, concurrency, and speculative decoding.
+- **Free playground:** every serving control updates a labeled 30-second learned rollout, queue trajectory, SLO readout, and plain-language causal explanation.
+- **Production incidents:** learners predict a failure, combine multiple interventions, and validate the result against an independent trace.
+
+The progression is deliberately simple: **learn → experiment → diagnose → operate**.
 
 ## What is real today
 
