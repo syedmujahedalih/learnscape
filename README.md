@@ -39,7 +39,7 @@ No API key, model download, or GPU is required for the learned forecast and refe
 
 ## Privacy-light telemetry
 
-The public demo records only allowlisted interaction events, a one-way-hashed tab session identifier, coarse device class, and coarse referral source. It does not store names, email addresses, raw IPs, uploaded content, or cross-site identifiers. Do Not Track is respected, raw events expire after 30 days, and `/api/telemetry` exposes aggregate counts only.
+The public demo records only allowlisted interaction events, a one-way-hashed tab session identifier, coarse device class, and coarse referral source. It does not store names, email addresses, raw IPs, uploaded content, or cross-site identifiers. Do Not Track is respected, raw events expire after 30 days, and `/api/telemetry` exposes aggregate counts only to the owner via a protected admin key.
 
 ## Retrain the world model
 

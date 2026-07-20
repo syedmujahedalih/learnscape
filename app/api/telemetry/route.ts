@@ -70,7 +70,12 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const adminKey = process.env.P99_TELEMETRY_ADMIN_KEY;
+  const suppliedKey = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  if (!adminKey) return Response.json({ error: "Telemetry metrics are not configured." }, { status: 503 });
+  if (!suppliedKey) return Response.json({ error: "Telemetry metrics require owner authorization." }, { status: 401 });
+  if (suppliedKey !== adminKey) return Response.json({ error: "Invalid telemetry authorization." }, { status: 403 });
   try {
     const db = getDb();
     const [totals, recent, byEvent, bySource, byDevice] = await Promise.all([
