@@ -16,7 +16,21 @@ Recommended GPT-5.6 Terra prompt:
 
 ## The one-line pitch
 
-Learnscape turns STEM concepts into interactive systems that reveal how a student reasons, choose the experiment they need next, and verify that understanding transfers.
+Learnscape teaches controls by letting students inspect, use, and falsify a physics-grounded latent world model.
+
+## Current judged path — 90 seconds
+
+| Time | Screen action | Narration |
+|---|---|---|
+| 0:00–0:12 | Hold on the new landing page. Point from **Predict** to **Falsify**. | “Controls students learn equations and use simulators, but rarely get to interrogate the model doing the predicting. Learnscape makes that model the lesson.” |
+| 0:12–0:25 | Enter the CartPole lab. Choose **The model will recover it** in the known world. | “Two rendered frames become an eight-dimensional latent state. The model predicts the next latent conditioned on left, coast, or right.” |
+| 0:25–0:42 | Click **Imagine 768 futures**. Point to the ghost CartPole and latent bars. | “Cross-entropy search tests hundreds of action sequences in imagination. Model Predictive Control takes one action, observes the world, and replans.” |
+| 0:42–0:57 | Run the plan and let the nominal rollout finish. | “In the training world, the learned plan catches the falling pole. The amber system is authoritative physics; the blue ghost is only the model’s forecast.” |
+| 0:57–1:12 | Reset to **Hidden friction**, predict surprise, imagine, and run. | “Now I change a rule the model never saw. Friction creates prediction error and the plan misses. Failure is not hidden—it becomes the student’s evidence about distribution shift and system identification.” |
+| 1:12–1:25 | Open **What is—and isn’t—learned?** | “This is a real but deliberately narrow world model: a visual encoder, action-conditioned latent dynamics, planning, and a physics reality check. It is not arbitrary AI-generated 3D content.” |
+| 1:25–1:30 | Return to the landing thesis. | “Learnscape: predict, imagine, act, falsify.” |
+
+## Earlier pendulum cut — supplementary
 
 ## Before recording
 
@@ -26,7 +40,7 @@ Learnscape turns STEM concepts into interactive systems that reveal how a studen
 - Record cursor clicks as the primary action; do not scroll while speaking unless the script calls for it.
 - Use the deterministic sample path. Local Llama and GPT are valuable architecture proof, but network latency should not be in the 90-second product video.
 
-## Official submission video — target 2:40
+## Earlier official submission video — target 2:40
 
 Record the product full-screen at 1440 × 900. Use deliberate cursor movement, no background music under important narration, and leave roughly 15 seconds of safety under the three-minute limit.
 

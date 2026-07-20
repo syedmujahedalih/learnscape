@@ -7,6 +7,8 @@ import { approximatePeriod, simulatePendulum, stepPendulum } from "../lib/pendul
 import { learnedPendulumStep, pendulumModelInfo } from "../lib/pendulum/model.ts";
 import { choosePendulumExperiment, inferPendulumBeliefs } from "../lib/learner/pendulum.ts";
 import { deterministicSourceAnalysis, sourceAnalysisSchema } from "../lib/blueprint/source-analysis.ts";
+import { cartPoleScore, cartPoleStart, stepCartPole } from "../lib/cartpole/engine.ts";
+import { cartPoleLatentError, encodeCartPole, planCartPole, renderCartPolePixels } from "../lib/cartpole/model.ts";
 
 test("titration reaches pH 7 at equivalence", () => { const state = calculateTitration(25); assert.equal(state.equivalenceMl, 25); assert.equal(state.pH, 7); assert.equal(state.excess, "none"); });
 test("titration tracks acid excess after equivalence", () => { const state = calculateTitration(30); assert.equal(state.excess, "hydronium"); assert.ok(state.pH < 7); });
@@ -37,4 +39,20 @@ test("verbose model copy is compacted to fit the lesson UI", () => {
   assert.ok(analysis.whyInteractive.length <= 220);
   assert.match(analysis.primaryCause, /…$/);
   assert.match(analysis.whyInteractive, /…$/);
+});
+test("CartPole observations are encoded into an action-conditioned latent", () => {
+  const start = cartPoleStart();
+  const next = stepCartPole(start, 1);
+  assert.equal(renderCartPolePixels(start).length, 576);
+  assert.equal(encodeCartPole(start, next).length, 8);
+  assert.ok(cartPoleLatentError(start, start, next, 1) < .35);
+});
+test("latent planning produces a complete CartPole control rollout", () => {
+  const start = cartPoleStart();
+  const plan = planCartPole(start, start);
+  assert.equal(plan.actions.length, plan.horizon);
+  assert.equal(plan.imagined.length, plan.horizon);
+  let state = start;
+  for (const action of plan.actions) state = stepCartPole(state, action);
+  assert.ok(cartPoleScore(state) >= 0);
 });

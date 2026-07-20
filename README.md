@@ -1,25 +1,24 @@
 # Learnscape
 
-**Predict what happens. Discover why.** Learnscape turns course material into interactive STEM systems where learners reveal how they think, run a useful experiment, explain the causal relationship, and transfer it to a new situation.
+**Predict. Imagine. Act. Falsify.** Learnscape teaches physics and controls by letting learners inspect a learned world model, use it to plan, and discover where its imagined dynamics stop matching reality.
 
 ## Product wedge
 
-Learnscape is not a generic course library or a points layer on top of video. Its differentiator is a source-grounded reasoning loop:
+Learnscape is not a generic “AI generates 3D lessons” platform. Its wedge is a model-based controls loop:
 
-1. **Predict** — commit before the controls unlock.
-2. **Experiment** — change the simulated world and capture evidence.
-3. **Compare** — decide whether the evidence supports or revises the original model.
-4. **Transfer** — apply the causal relationship in a changed situation.
+1. **Predict** — commit to what the learned model will do.
+2. **Imagine** — roll candidate action sequences through an action-conditioned latent model.
+3. **Act** — execute the selected plan in an authoritative physics environment.
+4. **Falsify** — change a hidden physical parameter and explain the resulting model error.
 
-The student path stays deliberately small: Predict, Test, Explain. Evidence, free exploration, and instructor diagnostics remain available on demand without competing with the next action. The Pendulum Observatory is the primary demo path.
-
-The flagship mission also maintains a probabilistic picture of the learner's current misconception. It combines their prediction, confidence, reflection, explanation, and transfer response, then selects the experiment with the highest expected learning value. The recommendation is locked while the student runs it so the evidence trail stays coherent. An optional instructor lens makes the inference and recommendation inspectable.
+The first buyer remains a physics, robotics, or controls instructor. The core value is not prettier simulation: students learn representation, dynamics, planning, distribution shift, and system identification by making the model itself an object of inquiry.
 
 ## The focused prototype
 
-- Pendulum Observatory — the single visible flagship: a polished Three.js lesson with live kinetic/potential energy, a validated RK4 reference, and a trained 818-parameter transition forecast running in the browser.
-- Source workflow — a source becomes a testable relationship and an interactive world. Clear matches route into validated labs for pendulums, Ohm’s law, titration, and outliers; every other source receives an explicitly labelled concept studio rather than a fake simulation. It supports local Llama analysis, OpenAI Responses API structured output, deterministic replay, and short PDFs (up to six pages) through GPT.
-- Adaptive learning missions — prediction locks, confidence capture, misconception inference, information-guided experiment selection, transfer checks, insight scoring, and replayable concept passports.
+- CartPole World Model Lab — two rendered observations are encoded into an 8D latent; an action-conditioned transition model imagines futures; Cross-Entropy Method search selects a plan; receding-horizon control replans after every observation; analytic CartPole physics judges the result.
+- Falsification challenge — the nominal world matches the model’s training distribution, while hidden cart friction creates a visible out-of-distribution failure and prediction-error trail.
+- Pendulum Observatory — a complementary causal-learning mission with Three.js motion, RK4 reference physics, learner-state inference, and a small learned next-state forecast.
+- Source workflow — physics material can still be mapped into a causal question and an available validated lab. Unsupported material remains an explicitly labelled concept studio rather than a fabricated simulation.
 
 The pendulum remains the most complete adaptive mission. The other routed labs are deliberately labelled by their current validation status, and sources outside those domains stay in the concept studio until a verified domain model is available.
 
@@ -39,11 +38,15 @@ See [local development and model connections](docs/local-development.md) for the
 
 ## Scientific boundaries
 
-The pendulum assumes a rigid massless cord, point-mass bob, uniform gravity, and linear damping. Its learned forecast is educational; the numerical solver remains the validated reference. The titration is an idealized educational calculation, the circuit is not a SPICE simulator, and statistics remains a narrow experimental preview. Every blueprint states its validation status.
+The CartPole model is a compact, LeWorldModel-inspired educational prototype—not an implementation of LeWorldModel, Dreamer, or TD-MPC2. It is trained on synthetic nominal CartPole trajectories with a joint-embedding prediction objective, anti-collapse regularization, and a small physics-grounding probe. It does not learn from arbitrary uploaded videos or generalize across embodiments. The analytic dynamics remain authoritative.
 
 ## Retrain the pendulum predictor
 
 Run `python3 scripts/train_pendulum_model.py` to regenerate the deterministic TypeScript weight artifact. The training script uses procedurally generated state transitions and records its validation score alongside the exported weights.
+
+## Retrain the CartPole latent model
+
+Run `python3 scripts/train_cartpole_world_model.py`. It generates 28,000 nominal transitions, renders paired observations, trains the visual encoder and action-conditioned latent transition, fits the interpretability probe, validates the model, and exports browser-native TypeScript weights.
 
 ## Build Week notes
 
