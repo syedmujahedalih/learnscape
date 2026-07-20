@@ -1,0 +1,17 @@
+Textbooks can tell students what happens. But a student can memorize the formula and still keep the wrong model of what causes it.
+
+Learnscape turns course material into an interactive world. It identifies the relationship worth understanding, a misconception worth testing, and the experience that can create evidence.
+
+Before touching the controls, the learner makes a prediction and states their confidence. A wrong answer is not failure. It is useful evidence about how they currently think.
+
+Learnscape uses that evidence to prepare one clean experiment. Here, it changes only the bob's mass while keeping length and release angle fixed.
+
+The student releases the pendulum. The validated physics reference and a learned next-state forecast make the hidden dynamics visible.
+
+Now the original belief meets the observation. Both bobs have the same ideal period. Mass changes energy, not swing time.
+
+The learner must explain the result and transfer the rule to a new situation. Progress is earned through transfer, not clicking through content.
+
+Learnscape combines a domain model, interactive world, learner model, and adaptive tutor. Codex and GPT-5.6 Terra helped turn that architecture into a tested prototype.
+
+Learnscape. Predict. Experiment. Understand why. Causal understanding is the product.

@@ -30,6 +30,10 @@ export const pendulumBlueprint = base("sample-pendulum", "The Pendulum Observato
 
 pendulumBlueprint.source.summary = "A pendulum transforms gravitational potential energy into kinetic energy. Its period depends on length and gravitational acceleration, while ideal bob mass does not change the period.";
 pendulumBlueprint.source.relevantExcerpts = [{ text: "A longer pendulum has a longer period; increasing bob mass changes its energy but not its ideal period.", conceptIds: ["period", "energy"] }];
+pendulumBlueprint.relationships = [
+  { cause: "length", effect: "period", relationship: "increases", explanation: "Increasing pendulum length increases the ideal swing period." },
+  { cause: "mass", effect: "period", relationship: "depends_on", explanation: "Ideal swing period does not depend on bob mass." },
+];
 pendulumBlueprint.commonMisconceptions = ["A heavier bob swings faster.", "The pendulum moves fastest at the highest point.", "Energy disappears at the bottom of the swing."];
 pendulumBlueprint.assumptions = ["Rigid massless cord, point-mass bob, uniform gravity, and configurable linear damping."];
 pendulumBlueprint.limitations = ["The learned forecast is an educational transition model; the numerical solver remains the validated reference."];
