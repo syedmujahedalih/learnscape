@@ -4,6 +4,8 @@
 
 [Launch the P99 playground →](https://learnscape-education.syedmujahedalih.chatgpt.site)
 
+The hosted demo is public and works without an account or API key.
+
 P99 is an OpenAI Build Week Education-track project built for students and engineers learning to operate production AI infrastructure. Instead of separating quantization, batching, caching, and decoding into passive lessons, it makes their interaction the curriculum.
 
 ## Learning experience
@@ -34,6 +36,10 @@ npm run dev
 ```
 
 No API key, model download, or GPU is required for the learned forecast and reference-trace path. To enable real ephemeral GPU runs, follow [docs/cloud-benchmarks.md](docs/cloud-benchmarks.md).
+
+## Privacy-light telemetry
+
+The public demo records only allowlisted interaction events, a one-way-hashed tab session identifier, coarse device class, and coarse referral source. It does not store names, email addresses, raw IPs, uploaded content, or cross-site identifiers. Do Not Track is respected, raw events expire after 30 days, and `/api/telemetry` exposes aggregate counts only.
 
 ## Retrain the world model
 
