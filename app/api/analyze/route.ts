@@ -3,7 +3,14 @@ import { blueprintSchema, type LearnscapeBlueprint } from "@/lib/blueprint/schem
 import { circuitBlueprint, pendulumBlueprint, statisticsBlueprint, titrationBlueprint } from "@/lib/blueprint/fixtures";
 import { deterministicSourceAnalysis, sourceAnalysisJsonSchema, sourceAnalysisSchema, type AnalysisMeta, type SourceAnalysis } from "@/lib/blueprint/source-analysis";
 
-const system = `You are Learnscape's pedagogical source mapper. Convert the supplied course material into one concise, source-grounded causal learning experience. Identify the relationship a student should predict, the most plausible misconception worth testing, and why interaction adds value. Route only clear matches to these validated labs: pendulum_world for pendulum motion; ohms_law_circuit for Ohm's law, voltage, current, or resistance; acid_base_titration for acid-base titration; statistics_explorer for mean, median, or outliers. Route every other topic to concept_studio. concept_studio is an interactive causal map, not a numerical simulation; never claim it is experimentally validated. Do not invent claims beyond the supplied source. sourceExcerpt must be a faithful transcription or quotation from the source and no longer than 500 characters.`;
+const system = `You are Learnscape's pedagogical source mapper. Convert the supplied course material into one concise, source-grounded causal learning experience. Identify the relationship a student should predict, the most plausible misconception worth testing, and why interaction adds value. Route only clear matches to these validated labs: pendulum_world for pendulum motion; ohms_law_circuit for Ohm's law, voltage, current, or resistance; acid_base_titration for acid-base titration; statistics_explorer for mean, median, or outliers. Route every other topic to concept_studio. concept_studio is an interactive causal map, not a numerical simulation; never claim it is experimentally validated. Do not invent claims beyond the supplied source. sourceExcerpt must be a faithful transcription or quotation from the source and no longer than 500 characters. Keep primaryCause and primaryEffect to short noun phrases under 60 characters. Keep whyInteractive to one concrete sentence under 180 characters.`;
+
+function readableAnalysisError(error: unknown) {
+  if (error instanceof SyntaxError || (error instanceof Error && error.name === "ZodError")) {
+    return "GPT read the source but could not finish a usable lesson outline. Try creating the world again.";
+  }
+  return error instanceof Error ? error.message.replace("; showing the deterministic demo replay.", ".") : "The source could not be read.";
+}
 
 function conceptStudioBlueprint(analysis: SourceAnalysis): LearnscapeBlueprint {
   return {
@@ -117,7 +124,7 @@ export async function POST(request: Request) {
     const analysis: AnalysisMeta = { ...result.analysis, provider, live: true, model: result.model };
     return NextResponse.json({ blueprint: blueprintSchema.parse(blueprint), analysis, usage: "usage" in result ? result.usage : undefined });
   } catch (error) {
-    if (image || pdf) return NextResponse.json({ error: error instanceof Error ? error.message.replace("; showing the deterministic demo replay.", ".") : "The source could not be read." }, { status: 503 });
+    if (image || pdf) return NextResponse.json({ error: readableAnalysisError(error) }, { status: 503 });
     const mapped = deterministicSourceAnalysis(text);
     const selected = templateFor(mapped);
     const blueprint = { ...selected, id: `fallback-${Date.now()}`, title: mapped.title, source: { sourceType: "manual" as const, extractedText: text, summary: mapped.summary, relevantExcerpts: [{ text: text.slice(0, 280), conceptIds: selected.concepts.map(c => c.id) }] } };

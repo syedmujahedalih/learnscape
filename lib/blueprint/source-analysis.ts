@@ -1,16 +1,26 @@
 import { z } from "zod";
 import type { LearnscapeBlueprint } from "./schema";
 
+function compactTo(value: string, maximum: number) {
+  const clean = value.trim().replace(/\s+/g, " ");
+  if (clean.length <= maximum) return clean;
+  const clipped = clean.slice(0, maximum - 1);
+  const lastSpace = clipped.lastIndexOf(" ");
+  return `${(lastSpace > maximum * 0.65 ? clipped.slice(0, lastSpace) : clipped).trimEnd()}…`;
+}
+
+const conciseString = (maximum: number) => z.string().trim().min(1).transform(value => compactTo(value, maximum));
+
 export const sourceAnalysisSchema = z.object({
   templateId: z.enum(["pendulum_world", "acid_base_titration", "ohms_law_circuit", "statistics_explorer", "concept_studio"]),
-  title: z.string().min(1).max(80),
-  summary: z.string().min(1).max(320),
-  sourceExcerpt: z.string().min(1).max(500),
-  causalQuestion: z.string().min(1).max(180),
-  primaryCause: z.string().min(1).max(80),
-  primaryEffect: z.string().min(1).max(80),
-  misconception: z.string().min(1).max(180),
-  whyInteractive: z.string().min(1).max(220),
+  title: conciseString(80),
+  summary: conciseString(320),
+  sourceExcerpt: conciseString(500),
+  causalQuestion: conciseString(180),
+  primaryCause: conciseString(80),
+  primaryEffect: conciseString(80),
+  misconception: conciseString(180),
+  whyInteractive: conciseString(220),
 });
 
 export type SourceAnalysis = z.infer<typeof sourceAnalysisSchema>;

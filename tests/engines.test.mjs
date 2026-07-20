@@ -6,7 +6,7 @@ import { statistics } from "../lib/statistics/simulations.ts";
 import { approximatePeriod, simulatePendulum, stepPendulum } from "../lib/pendulum/engine.ts";
 import { learnedPendulumStep, pendulumModelInfo } from "../lib/pendulum/model.ts";
 import { choosePendulumExperiment, inferPendulumBeliefs } from "../lib/learner/pendulum.ts";
-import { deterministicSourceAnalysis } from "../lib/blueprint/source-analysis.ts";
+import { deterministicSourceAnalysis, sourceAnalysisSchema } from "../lib/blueprint/source-analysis.ts";
 
 test("titration reaches pH 7 at equivalence", () => { const state = calculateTitration(25); assert.equal(state.equivalenceMl, 25); assert.equal(state.pH, 7); assert.equal(state.excess, "none"); });
 test("titration tracks acid excess after equivalence", () => { const state = calculateTitration(30); assert.equal(state.excess, "hydronium"); assert.ok(state.pH < 7); });
@@ -21,3 +21,20 @@ test("the learner belief distribution stays normalized", () => { const beliefs =
 test("revision, explanation, and transfer reduce the diagnosed misconception", () => { const predictionOnly = inferPendulumBeliefs({ prediction: "The swing becomes faster", confidence: 80, experimentCompleted: false, reflection: "", explanation: "", transferChoice: "" }); const afterLearning = inferPendulumBeliefs({ prediction: "The swing becomes faster", confidence: 80, experimentCompleted: true, reflection: "revised", explanation: "Mass does not change the period; length controls swing time.", transferChoice: "lengthen the cord" }); assert.ok(afterLearning.mass_period < predictionOnly.mass_period); assert.ok(afterLearning.ready > predictionOnly.ready); });
 test("source mapping recognizes the pendulum causal world", () => { const analysis = deterministicSourceAnalysis("The ideal pendulum period depends on length and gravity, not bob mass."); assert.equal(analysis.templateId, "pendulum_world"); assert.match(analysis.causalQuestion, /pendulum/i); assert.match(analysis.misconception, /heavier/i); });
 test("unknown source material receives a source-grounded concept studio", () => { const analysis = deterministicSourceAnalysis("A survey of medieval manuscript illumination techniques."); assert.equal(analysis.templateId, "concept_studio"); assert.match(analysis.whyInteractive, /causal map/i); });
+test("verbose model copy is compacted to fit the lesson UI", () => {
+  const analysis = sourceAnalysisSchema.parse({
+    templateId: "concept_studio",
+    title: "Newton's First Law and Friction",
+    summary: "A source-grounded lesson about motion and friction.",
+    sourceExcerpt: "A body in motion tends to remain in motion unless acted on by a net external force.",
+    causalQuestion: "How does friction change the motion of a sliding object?",
+    primaryCause: "the amount of kinetic friction acting opposite the direction of the object's motion on the surface",
+    primaryEffect: "the object's speed over time",
+    misconception: "An object needs a continuing net force to keep moving at constant velocity.",
+    whyInteractive: "A learner can compare otherwise identical objects on surfaces with different friction, observe the resulting changes in velocity over time, connect the evidence to net force and Newton's first law, revise an initial prediction, and explain why the object slows down without treating motion itself as evidence of a continuing forward force.",
+  });
+  assert.ok(analysis.primaryCause.length <= 80);
+  assert.ok(analysis.whyInteractive.length <= 220);
+  assert.match(analysis.primaryCause, /…$/);
+  assert.match(analysis.whyInteractive, /…$/);
+});
