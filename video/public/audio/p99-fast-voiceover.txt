@@ -1,0 +1,13 @@
+Most inference courses give you diagrams. P99 gives you decisions.
+
+Follow one request from queue to prefill, decode, and stream. Then commit to a hypothesis before the explanation.
+
+In the playground, change precision, batching, cache, and decoding. Each choice becomes a reproducible experiment.
+
+P99 draws a hard line. No connected runtime, no made-up benchmark.
+
+Attach local or cloud compute and let the trace grade your intuition.
+
+I built P99 with Codex and GPT-5.6 during OpenAI Build Week, including iterations from my phone.
+
+Learn the stack. Measure what actually happens.

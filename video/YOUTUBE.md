@@ -24,4 +24,4 @@ Source: https://github.com/syedmujahedalih/learnscape
 
 ## Upload
 
-Upload `video/out/p99-youtube-demo.mp4` as Public or Unlisted. Verify the finished URL in a private window before adding it to Devpost.
+Upload `video/out/p99-fast-demo.mp4` as Public or Unlisted. It is the tighter 45-second product cut. Verify the finished URL in a private window before adding it to Devpost.
