@@ -11,7 +11,7 @@
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
     "test": "npm run build && node --test tests/*.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "world-model:train": "node scripts/train_inference_world_model.mjs",
+    "dynamics:train": "node scripts/train_learned_dynamics.mjs",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {

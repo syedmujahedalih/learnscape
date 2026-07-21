@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { initialConfig, simulateInference } from "../lib/inference/engine.ts";
-import { forecastWorld, worldModelInfo } from "../lib/inference/world-model.ts";
+import { forecastDynamics, learnedDynamicsInfo } from "../lib/inference/learned-dynamics.ts";
 
 test("the launch configuration reproduces the latency incident", () => {
   const metrics = simulateInference(initialConfig);
@@ -30,17 +30,17 @@ test("an oversized memory plan fails before execution", () => {
 });
 
 test("the learned next-state model rolls a system state forward", () => {
-  const rollout = forecastWorld(initialConfig);
+  const rollout = forecastDynamics(initialConfig);
   assert.equal(rollout.trajectory.length, 13);
   assert.ok(rollout.trajectory.at(-1).queueDepth > 100);
   assert.equal(rollout.metrics.passed, false);
   assert.ok(rollout.metrics.p95Ms > 10_000);
-  assert.equal(worldModelInfo.parameters, 630);
-  assert.equal(worldModelInfo.architecture, "19→24→6 next-state MLP");
+  assert.equal(learnedDynamicsInfo.parameters, 630);
+  assert.equal(learnedDynamicsInfo.architecture, "19→24→6 next-state MLP");
 });
 
 test("the learned rollout recognizes the successful intervention", () => {
-  const rollout = forecastWorld({ precision: "INT4", batchSize: 8, cacheGb: 10, concurrency: 12, prefixCache: true, speculative: true });
+  const rollout = forecastDynamics({ precision: "INT4", batchSize: 8, cacheGb: 10, concurrency: 12, prefixCache: true, speculative: true });
   assert.equal(rollout.metrics.passed, true);
   assert.ok(rollout.metrics.throughput >= 230);
   assert.ok(rollout.metrics.p95Ms <= 4000);

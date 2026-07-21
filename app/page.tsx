@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { initialConfig, launchWorkload, simulateInference, type BatchSize, type CacheSize, type Concurrency, type InferenceConfig, type InferenceMetrics, type Precision } from "@/lib/inference/engine";
 import type { CloudBenchmarkStatus } from "@/lib/inference/trace";
-import { forecastWorld, worldModelInfo } from "@/lib/inference/world-model";
+import { forecastDynamics, learnedDynamicsInfo } from "@/lib/inference/learned-dynamics";
 
 type View = "home" | "learn" | "playground" | "incident";
 type Prediction = "clear" | "latency" | "oom" | "";
@@ -135,7 +135,7 @@ export default function Home() {
   const [cloudError, setCloudError] = useState("");
   const [cloudResult, setCloudResult] = useState<InferenceMetrics | null>(null);
 
-  const rollout = useMemo(() => forecastWorld(config), [config]);
+  const rollout = useMemo(() => forecastDynamics(config), [config]);
   const forecast = rollout.metrics;
   const referenceResult = useMemo(() => simulateInference(config), [config]);
   const result = executionMode === "cloud" && cloudResult ? cloudResult : referenceResult;
@@ -271,7 +271,7 @@ export default function Home() {
             <div className="memory-map"><div className="map-title"><span>VRAM ALLOCATION</span><b>{shown.vramGb} / {capacityGb} GB</b></div><div className="memory-bar"><i style={{width:`${Math.min(100, shown.vramGb / capacityGb * 100)}%`}}/></div><div className="memory-legend"><span><i className="weights"/>WEIGHTS</span><span><i className="cache"/>KV CACHE</span><span><i className="runtime"/>RUNTIME</span></div></div>
           </div>
           <div className="metric-grid">
-            <Metric label="TIME TO FIRST TOKEN" value={formatSeconds(shown.ttftMs)} delta={observed ? `${Math.abs(result.ttftMs-forecast.ttftMs)}ms forecast error` : "world model forecast"}/>
+            <Metric label="TIME TO FIRST TOKEN" value={formatSeconds(shown.ttftMs)} delta={observed ? `${Math.abs(result.ttftMs-forecast.ttftMs)}ms forecast error` : "learned forecast"}/>
             <Metric label="P95 END-TO-END" value={formatSeconds(shown.p95Ms)} danger={shown.p95Ms > 4000} delta="target ≤ 4.00s"/>
             <Metric label="THROUGHPUT" value={`${shown.throughput}`} suffix="tok/s" danger={shown.throughput < 230} delta="demand 230 tok/s"/>
             <Metric label="QUEUE DEPTH" value={`${shown.queueDepth}`} danger={shown.queueDepth > 55} delta="requests waiting"/>
@@ -292,9 +292,9 @@ export default function Home() {
           <Toggle label="PREFIX CACHING" detail="Reuse the shared system prompt" checked={config.prefixCache} onChange={value=>update("prefixCache",value)}/>
           <Toggle label="SPECULATIVE DECODING" detail="Draft tokens, verify in parallel" checked={config.speculative} onChange={value=>update("speculative",value)}/>
           <div className="prediction-block"><span>COMMIT YOUR PREDICTION</span><div><button className={prediction==="clear"?"selected":""} onClick={()=>setPrediction("clear")}>Queue clears</button><button className={prediction==="latency"?"selected":""} onClick={()=>setPrediction("latency")}>Latency fails</button><button className={prediction==="oom"?"selected":""} onClick={()=>setPrediction("oom")}>GPU OOMs</button></div></div>
-          <div className="run-actions"><button className="forecast-button" disabled={!prediction || running} onClick={()=>{setForecasted(true);setObserved(false);trackEvent("forecast_generated",{value:prediction})}}>{forecasted ? "ROLL OUT AGAIN" : "ROLL OUT WORLD MODEL"}</button><button className="deploy-button" disabled={!forecasted || running || (executionMode === "cloud" && !cloudConfigured)} onClick={run}>{running ? executionMode === "cloud" ? "BENCHMARK RUNNING…" : "REPLAYING TRACE…" : executionMode === "cloud" ? `LAUNCH ${cloudGpu} BENCHMARK →` : "REPLAY REFERENCE TRACE →"}</button></div>
+          <div className="run-actions"><button className="forecast-button" disabled={!prediction || running} onClick={()=>{setForecasted(true);setObserved(false);trackEvent("forecast_generated",{value:prediction})}}>{forecasted ? "ROLL OUT AGAIN" : "ROLL OUT LEARNED DYNAMICS"}</button><button className="deploy-button" disabled={!forecasted || running || (executionMode === "cloud" && !cloudConfigured)} onClick={run}>{running ? executionMode === "cloud" ? "BENCHMARK RUNNING…" : "REPLAYING TRACE…" : executionMode === "cloud" ? `LAUNCH ${cloudGpu} BENCHMARK →` : "REPLAY REFERENCE TRACE →"}</button></div>
           {cloudError && <p className="cloud-error">{cloudError}</p>}
-          <div className="model-provenance"><span>NEXT-STATE MODEL</span><b>{worldModelInfo.architecture}</b><small>{worldModelInfo.parameters} parameters · {worldModelInfo.transitions.toLocaleString()} transitions · RMSE {worldModelInfo.validationRmse}</small><em>{worldModelInfo.source === "bootstrap_synthetic" ? "BOOTSTRAP TRACE CORPUS" : "MEASURED TRACE CORPUS"}</em></div>
+          <div className="model-provenance"><span>LEARNED DYNAMICS SURROGATE</span><b>{learnedDynamicsInfo.architecture}</b><small>{learnedDynamicsInfo.parameters} parameters · {learnedDynamicsInfo.transitions.toLocaleString()} transitions · training-fit RMSE {learnedDynamicsInfo.validationRmse}</small><em>{learnedDynamicsInfo.source === "simulator_synthetic" ? "SYNTHETIC SIMULATOR TRACES" : "MEASURED GPU TRACES"}</em></div>
           <p className="truth-note"><i/> The learned model forecasts first. A labeled reference trace or an optional real GPU run grades it.</p>
         </aside>
       </div>
@@ -339,13 +339,13 @@ function LearnMetric({label,before,after,value,ran}:{label:string;before:number;
 
 function Playground({onLearn,onIncident}:{onLearn:()=>void;onIncident:()=>void}) {
   const [playConfig, setPlayConfig] = useState<InferenceConfig>({ ...initialConfig, precision: "INT8", batchSize: 8 });
-  const rollout = useMemo(() => forecastWorld(playConfig), [playConfig]);
+  const rollout = useMemo(() => forecastDynamics(playConfig), [playConfig]);
   const metrics = rollout.metrics;
   const updatePlay = <K extends keyof InferenceConfig>(key:K,value:InferenceConfig[K]) => { setPlayConfig(current=>({...current,[key]:value})); trackEvent("playground_control_changed", { label: String(key), value: String(value) }); };
   const loadPreset = (label:string, preset:InferenceConfig) => { setPlayConfig(preset); trackEvent("playground_preset_loaded", { label }); };
   const maxQueue = Math.max(...rollout.trajectory.map(frame=>frame.queueDepth),1);
   return <section className="play-view">
-    <div className="play-head"><div><span>FREE PLAYGROUND</span><h1>Change the stack.<br/><em>Watch cause become effect.</em></h1><p>No score and no prescribed answer. Build a serving configuration and inspect its predicted behavior.</p></div><div className="model-badge"><span>LEARNED DYNAMICS</span><b>{worldModelInfo.architecture}</b><small>Bootstrap-trained surrogate · every forecast is labeled</small></div></div>
+    <div className="play-head"><div><span>FREE PLAYGROUND</span><h1>Change the stack.<br/><em>Watch cause become effect.</em></h1><p>No score and no prescribed answer. Build a serving configuration and inspect its predicted behavior.</p></div><div className="model-badge"><span>LEARNED DYNAMICS</span><b>{learnedDynamicsInfo.architecture}</b><small>Simulator-trained surrogate · every forecast is labeled</small></div></div>
     <div className="play-shell">
       <aside className="play-controls"><div className="panel-index">01 / CONFIGURE</div><h2>Your serving stack</h2><Control label="WEIGHT PRECISION" hint="memory ↔ quality"><Segment values={["FP16","INT8","INT4"]} selected={playConfig.precision} onSelect={value=>updatePlay("precision",value as Precision)}/></Control><Control label="CONTINUOUS BATCH" hint="latency ↔ throughput"><Segment values={[1,8,16]} selected={playConfig.batchSize} onSelect={value=>updatePlay("batchSize",value as BatchSize)} prefix="B"/></Control><Control label="KV CACHE BUDGET" hint="capacity"><Segment values={[6,10,14]} selected={playConfig.cacheGb} onSelect={value=>updatePlay("cacheGb",value as CacheSize)} suffix="GB"/></Control><Control label="CONCURRENCY CAP" hint="queue pressure"><Segment values={[4,12,24]} selected={playConfig.concurrency} onSelect={value=>updatePlay("concurrency",value as Concurrency)} prefix="C"/></Control><Toggle label="PREFIX CACHING" detail="Reuse the shared system prompt" checked={playConfig.prefixCache} onChange={value=>updatePlay("prefixCache",value)}/><Toggle label="SPECULATIVE DECODING" detail="Draft tokens, verify in parallel" checked={playConfig.speculative} onChange={value=>updatePlay("speculative",value)}/><button className="play-reset" onClick={()=>setPlayConfig({...initialConfig,precision:"INT8",batchSize:8})}>RESET CONFIGURATION</button></aside>
       <section className="play-output"><div className="play-output-head"><div><span>02 / LEARNED FORECAST</span><h2>Thirty-second rollout</h2></div><div className={metrics.oom ? "play-status fail" : metrics.passed ? "play-status pass" : "play-status"}><i/>{metrics.oom ? "OOM PREDICTED" : metrics.passed ? "SLO HEADROOM" : "BOTTLENECK ACTIVE"}</div></div><div className="play-trajectory"><div className="trajectory-head"><span>QUEUE DEPTH OVER TIME</span><b>{metrics.queueDepth} requests at horizon</b></div><div className="trajectory-chart">{rollout.trajectory.map((frame,index)=><i key={index} style={{height:`${Math.max(4,frame.queueDepth/maxQueue*100)}%`}}><span>{index * 2.5}s</span></i>)}</div></div><div className="play-metrics"><Metric label="TIME TO FIRST TOKEN" value={formatSeconds(metrics.ttftMs)} delta="first visible output"/><Metric label="P95 END-TO-END" value={formatSeconds(metrics.p95Ms)} danger={metrics.p95Ms > 4000} delta="target ≤ 4.00s"/><Metric label="THROUGHPUT" value={`${metrics.throughput}`} suffix="tok/s" danger={metrics.throughput < 230} delta="demand 230 tok/s"/><Metric label="VRAM" value={`${metrics.vramGb}`} suffix="GB" danger={metrics.oom} delta="capacity 24 GB"/></div><div className="causal-readout"><span>WHY THE SYSTEM MOVED</span><h3>{metrics.oom ? "The runtime runs out of memory before serving begins." : metrics.bottleneck}</h3><p>{playConfig.precision === "INT4" ? "Four-bit weights free VRAM and increase decode capacity. " : playConfig.precision === "FP16" ? "Full-precision weights consume most of the device before the cache is allocated. " : "Eight-bit weights balance quality and memory headroom. "}{playConfig.batchSize > 1 ? `Batch ${playConfig.batchSize} keeps more GPU lanes occupied. ` : "Batch one leaves throughput on the table. "}{playConfig.prefixCache ? "Prefix reuse reduces repeated prefill work." : "Repeated prefixes are still being recomputed."}</p></div></section>

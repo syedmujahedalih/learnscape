@@ -1,12 +1,12 @@
 import { launchWorkload, simulateInference, type InferenceConfig, type InferenceMetrics } from "./engine.ts";
-import type { WorldState } from "./trace.ts";
-import { inferenceWorldModelWeights } from "./world-model-weights.ts";
+import type { DynamicsState } from "./trace.ts";
+import { learnedDynamicsWeights } from "./learned-dynamics-weights.ts";
 
 const scales = [420, 24, 24, 100, 350, 20_000] as const;
 
 const sigmoid = (value: number) => 1 / (1 + Math.exp(-Math.max(-18, Math.min(18, value))));
-const normalizeState = (state: WorldState) => [state.queueDepth / scales[0], state.activeRequests / scales[1], state.vramGb / scales[2], state.utilization / scales[3], state.throughput / scales[4], state.p95Ms / scales[5]];
-const denormalizeState = (values: number[]): WorldState => ({
+const normalizeState = (state: DynamicsState) => [state.queueDepth / scales[0], state.activeRequests / scales[1], state.vramGb / scales[2], state.utilization / scales[3], state.throughput / scales[4], state.p95Ms / scales[5]];
+const denormalizeState = (values: number[]): DynamicsState => ({
   queueDepth: Math.max(0, values[0] * scales[0]),
   activeRequests: Math.max(0, values[1] * scales[1]),
   vramGb: Math.max(0, values[2] * scales[2]),
@@ -15,7 +15,7 @@ const denormalizeState = (values: number[]): WorldState => ({
   p95Ms: Math.max(0, values[5] * scales[5]),
 });
 
-function encode(config: InferenceConfig, state: WorldState, progress: number) {
+function encode(config: InferenceConfig, state: DynamicsState, progress: number) {
   return [
     ...normalizeState(state),
     config.precision === "FP16" ? 1 : 0,
@@ -34,16 +34,16 @@ function encode(config: InferenceConfig, state: WorldState, progress: number) {
   ];
 }
 
-function step(config: InferenceConfig, state: WorldState, progress: number) {
+function step(config: InferenceConfig, state: DynamicsState, progress: number) {
   const input = encode(config, state, progress);
-  const hidden = inferenceWorldModelWeights.w1.map((weights, index) => Math.tanh(weights.reduce((sum, weight, inputIndex) => sum + weight * input[inputIndex], inferenceWorldModelWeights.b1[index])));
-  const output = inferenceWorldModelWeights.w2.map((weights, index) => sigmoid(weights.reduce((sum, weight, hiddenIndex) => sum + weight * hidden[hiddenIndex], inferenceWorldModelWeights.b2[index])));
+  const hidden = learnedDynamicsWeights.w1.map((weights, index) => Math.tanh(weights.reduce((sum, weight, inputIndex) => sum + weight * input[inputIndex], learnedDynamicsWeights.b1[index])));
+  const output = learnedDynamicsWeights.w2.map((weights, index) => sigmoid(weights.reduce((sum, weight, hiddenIndex) => sum + weight * hidden[hiddenIndex], learnedDynamicsWeights.b2[index])));
   return denormalizeState(output);
 }
 
-export function forecastWorld(config: InferenceConfig, horizon = 12): { metrics: InferenceMetrics; trajectory: WorldState[] } {
+export function forecastDynamics(config: InferenceConfig, horizon = 12): { metrics: InferenceMetrics; trajectory: DynamicsState[] } {
   const reference = simulateInference(config);
-  let state: WorldState = { queueDepth: 2, activeRequests: 1, vramGb: Math.min(23.8, reference.vramGb * .82), utilization: 24, throughput: 18, p95Ms: 850 };
+  let state: DynamicsState = { queueDepth: 2, activeRequests: 1, vramGb: Math.min(23.8, reference.vramGb * .82), utilization: 24, throughput: 18, p95Ms: 850 };
   const trajectory = [state];
   for (let index = 0; index < horizon; index++) {
     state = step(config, state, index / Math.max(1, horizon - 1));
@@ -84,4 +84,4 @@ export function forecastWorld(config: InferenceConfig, horizon = 12): { metrics:
   };
 }
 
-export const worldModelInfo = inferenceWorldModelWeights.meta;
+export const learnedDynamicsInfo = learnedDynamicsWeights.meta;

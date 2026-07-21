@@ -50,7 +50,7 @@ The first run can be slow because the container image and GGUF file are cold. Ru
 Completed traces are stored in the Modal Volume named `p99-benchmark-traces`. Download the `.json` files into `data/traces/`, then run:
 
 ```bash
-npm run world-model:train
+npm run dynamics:train
 ```
 
-Once at least 200 measured transitions exist, the generated model metadata changes from `bootstrap_synthetic` to `cloud_and_local_traces`.
+Once at least 200 measured transitions exist, the generated model metadata changes from `simulator_synthetic` to `cloud_and_local_traces`.

@@ -2,19 +2,19 @@
 
 P99 has three deliberately separate layers.
 
-## 1. Learned world model
+## 1. Learned dynamics surrogate
 
-`lib/inference/world-model.ts` recursively applies a generated 19-input, 24-hidden-unit, 6-output MLP. Its state is:
+`lib/inference/learned-dynamics.ts` recursively applies a generated 19-input, 24-hidden-unit, 6-output MLP. Its state is:
 
 `queue depth + active requests + VRAM + GPU utilization + throughput + p95 latency`
 
-Each step is conditioned on the previous state, serving configuration, workload, and rollout progress. Because the prediction becomes the next input, this is a small next-state world model rather than a single outcome regression. An explicit SLO head derives end-to-end tail latency and the mission score from the predicted system state.
+Each step is conditioned on the previous state, serving configuration, workload, and rollout progress. The prediction becomes the next input, creating a recursive learned trajectory rather than a single outcome regression. An explicit SLO head derives end-to-end tail latency and the mission score from the predicted system state.
 
-The generated weights and training metadata are in `lib/inference/world-model-weights.ts`. `scripts/train_inference_world_model.mjs` can fit the model from normalized trace transitions.
+The generated weights and training metadata are in `lib/inference/learned-dynamics-weights.ts`. `scripts/train_learned_dynamics.mjs` can fit the model from normalized trace transitions.
 
 ## 2. Independent validation
 
-The default reference path calls the deterministic educational engine in `lib/inference/engine.ts`. It does not share learned weights with the world model. This preserves a fast, repeatable demo and makes forecast error visible.
+The default reference path calls the deterministic educational engine in `lib/inference/engine.ts`. It does not share learned weights with the surrogate. This preserves a fast, repeatable demo and makes forecast error visible.
 
 When configured, `app/api/benchmark/route.ts` instead creates and polls a real GPU job. The API key remains server-side.
 

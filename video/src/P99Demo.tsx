@@ -71,7 +71,7 @@ const P99Mark: React.FC<{ small?: boolean }> = ({ small = false }) => (
   </div>
 );
 
-const Chrome: React.FC<{ label: string; status?: string }> = ({ label, status = "WORLD MODEL ONLINE" }) => (
+const Chrome: React.FC<{ label: string; status?: string }> = ({ label, status = "LEARNED DYNAMICS ONLINE" }) => (
   <div
     style={{
       position: "absolute",
@@ -183,7 +183,7 @@ const ProductScene: React.FC<ProductSceneProps> = ({ duration, image, step, titl
   );
 };
 
-const WorldModelScene: React.FC<{ duration: number }> = ({ duration }) => {
+const DynamicsScene: React.FC<{ duration: number }> = ({ duration }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const enter = spring({ frame, fps, config: { damping: 17, stiffness: 85 } });
@@ -270,7 +270,7 @@ const BoundaryScene: React.FC<{ duration: number }> = ({ duration }) => {
   const enter = spring({ frame, fps, config: { damping: 17, stiffness: 84 } });
   const cards = [
     ["01", "REAL LEARNED MODEL", "A compact recursive next-state network predicts six serving-system variables.", acid],
-    ["02", "BOOTSTRAP TRACES", "The current training corpus comes from internally consistent reference dynamics.", amber],
+    ["02", "SYNTHETIC TRACES", "The current training corpus comes from the rule-based reference simulator.", amber],
     ["03", "MEASURED DATA PATH", "An optional Modal and llama.cpp runner can capture real GPU traces for retraining.", cyan],
   ] as const;
   return (
@@ -395,10 +395,10 @@ export const P99Demo: React.FC = () => (
     <Sequence from={570} durationInFrames={390}><ProductScene duration={390} image="02-foundations.png" step="FOUNDATIONS" title="Build the mental model." copy="Six short, visual labs isolate tail latency, batching, KV cache, quantization, concurrency, and speculative decoding." accent={acid} focus={{x:1350,y:560,label:"PREDICT FIRST"}}/></Sequence>
     <Sequence from={960} durationInFrames={350}><ProductScene duration={350} image="03-foundation-result.png" step="ACTIVE LEARNING" title="Change one variable. Explain why." copy="Immediate causal feedback connects the intervention to the system response." accent={acid} focus={{x:1180,y:670,label:"WHAT CHANGED"}}/></Sequence>
     <Sequence from={1310} durationInFrames={560}><ProductScene duration={560} image="04-playground.png" step="FREE PLAYGROUND" title="Explore without a prescribed answer." copy="Every serving control updates the queue trajectory, SLO readout, and a plain-language causal explanation." accent={cyan} focus={{x:1060,y:500,label:"30-SECOND ROLLOUT"}}/></Sequence>
-    <Sequence from={1870} durationInFrames={660}><WorldModelScene duration={660}/></Sequence>
+    <Sequence from={1870} durationInFrames={660}><DynamicsScene duration={660}/></Sequence>
     <Sequence from={2530} durationInFrames={170}><ProductScene duration={170} image="06-incident.png" step="PRODUCTION INCIDENT" title="Now protect five constraints at once." copy="Latency, throughput, VRAM, quality, and cost turn the mental model into an operational challenge." accent={red} focus={{x:180,y:510,label:"THE SLO ENVELOPE"}}/></Sequence>
     <Sequence from={2700} durationInFrames={260}><ProductScene duration={260} image="07-incident-configured.png" step="PREDICT + INTERVENE" title="Commit before seeing the answer." copy="INT4, continuous batching, prefix reuse, and speculative decoding reshape the serving dynamics." accent={cyan} focus={{x:1580,y:560,label:"CHANGE THE STACK"}}/></Sequence>
-    <Sequence from={2960} durationInFrames={175}><ProductScene duration={175} image="08-world-model-forecast.png" step="LEARNED FORECAST" title="The queue is predicted to clear." copy="The recursive rollout clears the SLO envelope, but the learned model still does not grade itself." accent={acid} focus={{x:820,y:430,label:"FORECAST FIRST"}}/></Sequence>
+    <Sequence from={2960} durationInFrames={175}><ProductScene duration={175} image="08-learned-dynamics-forecast.png" step="LEARNED FORECAST" title="The queue is predicted to clear." copy="The recursive rollout clears the SLO envelope, but the learned model still does not grade itself." accent={acid} focus={{x:820,y:430,label:"FORECAST FIRST"}}/></Sequence>
     <Sequence from={3135} durationInFrames={235}><ProductScene duration={235} image="09-reference-validated.png" step="VALIDATE" title="An independent trace checks the claim." copy="The reference engine reaches 2.66-second p95, 274 tokens per second, and a 100 out of 100 score." accent={acid} focus={{x:920,y:760,label:"INCIDENT CONTAINED"}}/></Sequence>
     <Sequence from={3370} durationInFrames={490}><BoundaryScene duration={490}/></Sequence>
     <Sequence from={3860} durationInFrames={830}><CodexScene duration={830}/></Sequence>

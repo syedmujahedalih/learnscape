@@ -1,6 +1,6 @@
 import type { InferenceConfig } from "./engine.ts";
 
-export type WorldState = {
+export type DynamicsState = {
   queueDepth: number;
   activeRequests: number;
   vramGb: number;
@@ -16,7 +16,7 @@ export type TraceWorkload = {
   demandTokensPerSecond: number;
 };
 
-export type BenchmarkFrame = WorldState & {
+export type BenchmarkFrame = DynamicsState & {
   elapsedSeconds: number;
   ttftMs?: number;
   powerWatts?: number;
@@ -24,7 +24,7 @@ export type BenchmarkFrame = WorldState & {
 
 export type BenchmarkTrace = {
   id: string;
-  source: "modal_gpu" | "local_llama" | "bootstrap_synthetic";
+  source: "modal_gpu" | "local_llama" | "simulator_synthetic";
   hardware: { gpu: string; memoryGb: number };
   model: { repo: string; quantization: string };
   config: InferenceConfig;

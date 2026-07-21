@@ -18,7 +18,7 @@ Try P99: https://learnscape-education.syedmujahedalih.chatgpt.site
 
 Source: https://github.com/syedmujahedalih/learnscape
 
-The checked-in model is trained on a labeled bootstrap trace corpus and is explicitly identified as such. The optional Modal and llama.cpp path is designed to collect measured GPU traces for retraining.
+The checked-in learned dynamics surrogate is trained on labeled synthetic simulator traces and is explicitly identified as such. The optional Modal and llama.cpp path is designed to collect measured GPU traces for retraining.
 
 #OpenAI #BuildWeek #Codex #InferenceEngineering #LLM #AIEducation
 
