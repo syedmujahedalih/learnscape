@@ -13,7 +13,7 @@ const panelFade = (frame: number, duration: number) => interpolate(
   {extrapolateLeft: "clamp", extrapolateRight: "clamp"},
 );
 
-const MeasuredSignals = ({duration}: {duration: number}) => {
+export const MeasuredSignals = ({duration}: {duration: number}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const metrics = [
@@ -36,7 +36,7 @@ const MeasuredSignals = ({duration}: {duration: number}) => {
   </AbsoluteFill>;
 };
 
-const TodayNext = ({duration}: {duration: number}) => {
+export const TodayNext = ({duration}: {duration: number}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const today = ["6 guided foundations", "Committed prediction loop", "Experiment specification", "Optional measured runner path"];

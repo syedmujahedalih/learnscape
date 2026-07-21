@@ -1,0 +1,15 @@
+Philip Kiely, author of Inference Engineering, writes: “Inference is the most valuable category in AI, but inference engineering is still in its infancy.”
+
+That line captures why this space excites me. But when I tried to learn inference engineering, I couldn’t find a good interactive platform for building intuition. Most resources explain the stack. I wanted somewhere you could predict, tune, experiment, and understand what changed. So I built P99.
+
+Start by following one request from queue to prefill, decode, and stream. Then commit to a hypothesis before seeing the explanation.
+
+In the playground, change precision, batching, cache, concurrency, and decoding. P99 turns those choices into a reproducible experiment.
+
+The key boundary is honesty. No runtime means no benchmark. Attach local or cloud compute and let a real trace report latency, throughput, queues, utilization, power, and memory. Quality stays separate.
+
+I built P99 with Codex and GPT-5.6 during OpenAI Build Week. Codex helped me pivot, implement, test, document, and deploy from desktop and phone.
+
+Today, the curriculum, prediction loop, experiment builder, and measured runner path work. Next is bring your own compute, then learned dynamics trained on diverse traces.
+
+Learn the stack. Measure what actually happens.

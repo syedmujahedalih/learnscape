@@ -30,4 +30,15 @@ cd video
 npm run render:judge
 ```
 
-Use `video/out/p99-judge-demo.mp4` for the Devpost submission. The 45-second fast cut remains useful for social posts.
+The upload-ready result is `video/out/p99-judge-demo.mp4`. This remains available as the product-first alternate cut.
+
+## Personal Devpost cut
+
+The recommended 90-second submission cut opens with Philip Kiely's observation that inference engineering is still in its infancy, then gives the founder motivation behind P99 before moving through the product, measured-runner boundary, Codex and GPT-5.6 usage, and future work.
+
+```bash
+cd video
+npm run render:personal
+```
+
+Use `video/out/p99-personal-demo.mp4` for the Devpost submission. The quote is sourced from [Philip Kiely's books page](https://philipkiely.com/books). Its ElevenLabs narration source is `public/audio/p99-personal-voiceover.txt`.
