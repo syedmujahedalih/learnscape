@@ -341,28 +341,28 @@ const Closing: React.FC<{ duration: number }> = ({ duration }) => {
 type Caption = { from: number; duration: number; text: string; hot: string[]; accent?: string };
 
 const captions: Caption[] = [
-  { from: 18, duration: 150, text: "LEARN INFERENCE BY RUNNING IT", hot: ["RUNNING", "IT"] },
-  { from: 220, duration: 170, text: "FROM FIRST PRINCIPLES TO PRODUCTION", hot: ["FIRST", "PRODUCTION"], accent: cyan },
-  { from: 585, duration: 185, text: "SIX FOCUSED FOUNDATION LABS", hot: ["SIX", "FOUNDATION"] },
-  { from: 790, duration: 180, text: "PREDICT. CHANGE ONE VARIABLE. EXPLAIN WHY.", hot: ["PREDICT.", "WHY."] },
-  { from: 1010, duration: 210, text: "FEEDBACK BUILDS THE MENTAL MODEL", hot: ["MENTAL", "MODEL"] },
-  { from: 1280, duration: 195, text: "FREE PLAYGROUND. NO PRESCRIBED ANSWER.", hot: ["FREE", "PLAYGROUND."] },
-  { from: 1490, duration: 195, text: "CHANGE THE STACK. WATCH CAUSE BECOME EFFECT.", hot: ["CAUSE", "EFFECT."] },
-  { from: 1730, duration: 195, text: "CURRENT STATE → NEXT STATE", hot: ["NEXT", "STATE"], accent: cyan },
-  { from: 1940, duration: 190, text: "RECURSIVE THIRTY-SECOND ROLLOUT", hot: ["RECURSIVE", "ROLLOUT"], accent: cyan },
-  { from: 2180, duration: 170, text: "THEN PRODUCTION PRESSURE", hot: ["PRODUCTION", "PRESSURE"], accent: red },
-  { from: 2360, duration: 145, text: "PROTECT FIVE SLOs AT ONCE", hot: ["FIVE", "SLOs"], accent: amber },
-  { from: 2540, duration: 170, text: "COMMIT A PREDICTION", hot: ["PREDICTION"] },
-  { from: 2720, duration: 195, text: "CHANGE THE SERVING STACK", hot: ["SERVING", "STACK"], accent: cyan },
-  { from: 2960, duration: 185, text: "LEARNED FORECAST FIRST", hot: ["FORECAST", "FIRST"] },
-  { from: 3160, duration: 185, text: "THE MODEL DOES NOT GRADE ITSELF", hot: ["NOT", "ITSELF"], accent: amber },
-  { from: 3380, duration: 180, text: "INDEPENDENT REFERENCE TRACE", hot: ["INDEPENDENT", "TRACE"] },
-  { from: 3570, duration: 180, text: "100 / 100 · INCIDENT CONTAINED", hot: ["100", "CONTAINED"] },
-  { from: 3800, duration: 180, text: "REAL SURROGATE. VISIBLE BOUNDARY.", hot: ["REAL", "VISIBLE"], accent: amber },
-  { from: 3990, duration: 170, text: "OPTIONAL PATH TO MEASURED GPU TRACES", hot: ["MEASURED", "GPU", "TRACES"], accent: cyan },
-  { from: 4220, duration: 175, text: "BUILT WITH CODEX + GPT-5.6", hot: ["CODEX", "GPT-5.6"] },
-  { from: 4410, duration: 165, text: "DESKTOP OR PHONE. KEEP BUILDING.", hot: ["PHONE.", "BUILDING."] },
-  { from: 4610, duration: 175, text: "TRY P99 LIVE", hot: ["P99", "LIVE"] },
+  { from: 18, duration: 160, text: "LEARN INFERENCE BEFORE PRODUCTION MAKES IT EXPENSIVE", hot: ["BEFORE", "EXPENSIVE"] },
+  { from: 205, duration: 145, text: "LEARN HOW THE SYSTEM BEHAVES", hot: ["SYSTEM", "BEHAVES"], accent: cyan },
+  { from: 375, duration: 175, text: "AN INTERACTIVE PLAYGROUND FOR LLM SERVING", hot: ["PLAYGROUND", "LLM"] },
+  { from: 585, duration: 180, text: "SIX FOCUSED FOUNDATION LABS", hot: ["SIX", "FOUNDATION"] },
+  { from: 790, duration: 160, text: "PREDICT FIRST. THEN CHANGE ONE VARIABLE.", hot: ["PREDICT", "ONE"] },
+  { from: 970, duration: 150, text: "PREFIX CACHING CUTS PREFILL WORK", hot: ["PREFIX", "PREFILL"] },
+  { from: 1130, duration: 150, text: "TIME TO FIRST TOKEN FALLS FIRST", hot: ["FIRST", "TOKEN"] },
+  { from: 1310, duration: 180, text: "EXPLORE THE SERVING STACK FREELY", hot: ["EXPLORE", "FREELY"], accent: cyan },
+  { from: 1510, duration: 205, text: "WATCH QUEUE, LATENCY, THROUGHPUT, AND VRAM MOVE", hot: ["QUEUE,", "VRAM"] },
+  { from: 1870, duration: 180, text: "CURRENT STATE → NEXT STATE", hot: ["NEXT", "STATE"], accent: cyan },
+  { from: 2170, duration: 185, text: "A TRAJECTORY. NOT A ONE-SHOT SCORE.", hot: ["TRAJECTORY.", "NOT"] },
+  { from: 2530, duration: 160, text: "THEN TRAFFIC JUMPS SIX TIMES", hot: ["SIX", "TIMES"], accent: red },
+  { from: 2720, duration: 190, text: "COMMIT. THEN CHANGE THE SERVING STACK.", hot: ["COMMIT.", "STACK."] },
+  { from: 2960, duration: 165, text: "THE LEARNED MODEL PREDICTS RECOVERY", hot: ["MODEL", "RECOVERY"] },
+  { from: 3135, duration: 175, text: "IT DOES NOT GRADE ITSELF", hot: ["NOT", "ITSELF"], accent: amber },
+  { from: 3315, duration: 160, text: "AN INDEPENDENT TRACE CHECKS THE CLAIM", hot: ["INDEPENDENT", "CHECKS"] },
+  { from: 3485, duration: 160, text: "100 / 100 · EVERY OBJECTIVE CLEARED", hot: ["100", "CLEARED"] },
+  { from: 3655, duration: 155, text: "REAL SURROGATE. EXPLICIT DATA BOUNDARY.", hot: ["REAL", "EXPLICIT"], accent: amber },
+  { from: 3820, duration: 180, text: "BUILT WITH CODEX + GPT-5.6", hot: ["CODEX", "GPT-5.6"] },
+  { from: 4260, duration: 185, text: "FROM IDEA TO DEPLOYED PRODUCT", hot: ["IDEA", "DEPLOYED"] },
+  { from: 4530, duration: 170, text: "DESKTOP AND PHONE. SAME BUILD.", hot: ["PHONE.", "BUILD."] },
+  { from: 4690, duration: 190, text: "TRY P99 LIVE", hot: ["P99", "LIVE"] },
 ];
 
 const KineticCaption: React.FC<Omit<Caption, "from">> = ({ duration, text: caption, hot, accent = acid }) => {
@@ -388,21 +388,21 @@ const CaptionTrack: React.FC = () => <>{captions.map(caption => <Sequence key={c
 
 export const P99Demo: React.FC = () => (
   <AbsoluteFill style={{ background: bg }}>
-    <Audio src={staticFile("audio/p99-voiceover.m4a")} volume={1} />
-    <Audio src={staticFile("audio/p99-ambient.m4a")} loop volume={0.45} />
+    <Audio src={staticFile("audio/p99-voiceover-final.m4a")} volume={1} />
+    <Audio src={staticFile("audio/p99-ambient.m4a")} loop volume={0.2} />
     <Sequence from={0} durationInFrames={210}><Opening duration={210}/></Sequence>
     <Sequence from={210} durationInFrames={360}><ProductScene duration={360} image="01-home.png" step="THE PLATFORM" title="One path from basics to production." copy="Foundations build the vocabulary. The playground builds intuition. Incidents test whether it transfers." accent={cyan} focus={{x:500,y:330,label:"LEARN BY RUNNING"}}/></Sequence>
-    <Sequence from={570} durationInFrames={420}><ProductScene duration={420} image="02-foundations.png" step="FOUNDATIONS" title="Build the mental model." copy="Six short, visual labs isolate tail latency, batching, KV cache, quantization, concurrency, and speculative decoding." accent={acid} focus={{x:1350,y:560,label:"PREDICT FIRST"}}/></Sequence>
-    <Sequence from={990} durationInFrames={270}><ProductScene duration={270} image="03-foundation-result.png" step="ACTIVE LEARNING" title="Change one variable. Explain why." copy="Immediate causal feedback connects the intervention to the system response." accent={acid} focus={{x:1180,y:670,label:"WHAT CHANGED"}}/></Sequence>
-    <Sequence from={1260} durationInFrames={450}><ProductScene duration={450} image="04-playground.png" step="FREE PLAYGROUND" title="Explore without a prescribed answer." copy="Every serving control updates the queue trajectory, SLO readout, and a plain-language causal explanation." accent={cyan} focus={{x:1060,y:500,label:"30-SECOND ROLLOUT"}}/></Sequence>
-    <Sequence from={1710} durationInFrames={450}><WorldModelScene duration={450}/></Sequence>
-    <Sequence from={2160} durationInFrames={360}><ProductScene duration={360} image="06-incident.png" step="PRODUCTION INCIDENT" title="Now protect five constraints at once." copy="Latency, throughput, VRAM, quality, and cost turn the mental model into an operational challenge." accent={red} focus={{x:180,y:510,label:"THE SLO ENVELOPE"}}/></Sequence>
-    <Sequence from={2520} durationInFrames={420}><ProductScene duration={420} image="07-incident-configured.png" step="PREDICT + INTERVENE" title="Commit before seeing the answer." copy="INT4, continuous batching, prefix reuse, and speculative decoding reshape the serving dynamics." accent={cyan} focus={{x:1580,y:560,label:"CHANGE THE STACK"}}/></Sequence>
-    <Sequence from={2940} durationInFrames={420}><ProductScene duration={420} image="08-world-model-forecast.png" step="LEARNED FORECAST" title="The queue is predicted to clear." copy="The recursive rollout clears the SLO envelope, but the learned model still does not grade itself." accent={acid} focus={{x:820,y:430,label:"FORECAST FIRST"}}/></Sequence>
-    <Sequence from={3360} durationInFrames={420}><ProductScene duration={420} image="09-reference-validated.png" step="VALIDATE" title="An independent trace checks the claim." copy="The reference engine reaches 2.66-second p95, 274 tokens per second, and a 100 out of 100 score." accent={acid} focus={{x:920,y:760,label:"INCIDENT CONTAINED"}}/></Sequence>
-    <Sequence from={3780} durationInFrames={420}><BoundaryScene duration={420}/></Sequence>
-    <Sequence from={4200} durationInFrames={390}><CodexScene duration={390}/></Sequence>
-    <Sequence from={4590} durationInFrames={210}><Closing duration={210}/></Sequence>
+    <Sequence from={570} durationInFrames={390}><ProductScene duration={390} image="02-foundations.png" step="FOUNDATIONS" title="Build the mental model." copy="Six short, visual labs isolate tail latency, batching, KV cache, quantization, concurrency, and speculative decoding." accent={acid} focus={{x:1350,y:560,label:"PREDICT FIRST"}}/></Sequence>
+    <Sequence from={960} durationInFrames={350}><ProductScene duration={350} image="03-foundation-result.png" step="ACTIVE LEARNING" title="Change one variable. Explain why." copy="Immediate causal feedback connects the intervention to the system response." accent={acid} focus={{x:1180,y:670,label:"WHAT CHANGED"}}/></Sequence>
+    <Sequence from={1310} durationInFrames={560}><ProductScene duration={560} image="04-playground.png" step="FREE PLAYGROUND" title="Explore without a prescribed answer." copy="Every serving control updates the queue trajectory, SLO readout, and a plain-language causal explanation." accent={cyan} focus={{x:1060,y:500,label:"30-SECOND ROLLOUT"}}/></Sequence>
+    <Sequence from={1870} durationInFrames={660}><WorldModelScene duration={660}/></Sequence>
+    <Sequence from={2530} durationInFrames={170}><ProductScene duration={170} image="06-incident.png" step="PRODUCTION INCIDENT" title="Now protect five constraints at once." copy="Latency, throughput, VRAM, quality, and cost turn the mental model into an operational challenge." accent={red} focus={{x:180,y:510,label:"THE SLO ENVELOPE"}}/></Sequence>
+    <Sequence from={2700} durationInFrames={260}><ProductScene duration={260} image="07-incident-configured.png" step="PREDICT + INTERVENE" title="Commit before seeing the answer." copy="INT4, continuous batching, prefix reuse, and speculative decoding reshape the serving dynamics." accent={cyan} focus={{x:1580,y:560,label:"CHANGE THE STACK"}}/></Sequence>
+    <Sequence from={2960} durationInFrames={175}><ProductScene duration={175} image="08-world-model-forecast.png" step="LEARNED FORECAST" title="The queue is predicted to clear." copy="The recursive rollout clears the SLO envelope, but the learned model still does not grade itself." accent={acid} focus={{x:820,y:430,label:"FORECAST FIRST"}}/></Sequence>
+    <Sequence from={3135} durationInFrames={235}><ProductScene duration={235} image="09-reference-validated.png" step="VALIDATE" title="An independent trace checks the claim." copy="The reference engine reaches 2.66-second p95, 274 tokens per second, and a 100 out of 100 score." accent={acid} focus={{x:920,y:760,label:"INCIDENT CONTAINED"}}/></Sequence>
+    <Sequence from={3370} durationInFrames={490}><BoundaryScene duration={490}/></Sequence>
+    <Sequence from={3860} durationInFrames={830}><CodexScene duration={830}/></Sequence>
+    <Sequence from={4690} durationInFrames={260}><Closing duration={260}/></Sequence>
     <CaptionTrack/>
   </AbsoluteFill>
 );

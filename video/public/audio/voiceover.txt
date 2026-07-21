@@ -1,23 +1,19 @@
-Most people learn inference engineering from diagrams, benchmark tables, or after latency is already failing in production.
+Most people discover inference engineering when latency is already failing. I built P99 so you can learn how these systems behave before production makes the lesson expensive.
 
-I built P ninety-nine to make that learning active.
+P99 is an interactive playground for LLM serving. Six foundation labs cover tail latency, batching, the KV cache, quantization, concurrency, and speculative decoding. Predict first, change one variable, watch the system respond, then explain why.
 
-It is an interactive playground for understanding how L L M serving systems behave. A learner can start with six focused foundation labs covering tail latency, batching, the K V cache, quantization, concurrency, and speculative decoding.
+In the cache lab, prefix caching cuts repeated prefill work. Time to first token falls while decode throughput barely moves. P99 makes that distinction visible.
 
-Each lab asks for a prediction, changes one variable, and explains the result. Here, prefix caching reduces repeated prefill work, so time to first token moves before decode throughput does.
+Then explore freely. Tune precision, batch size, cache capacity, or concurrency. P99 rolls forward for thirty seconds as queue depth, tail latency, throughput, and GPU memory move together, with a plain-English causal explanation.
 
-Then the learner enters the free playground. There is no score and no prescribed answer. Change precision, batch size, cache capacity, or concurrency, and the system rolls forward for thirty seconds. The queue, latency, throughput, and memory respond together, with a plain-language explanation of why.
+Under the interface is a compact learned next-state model. It takes the configuration, workload, and current state, then predicts the next queue, active requests, VRAM, utilization, throughput, and tail latency. Each prediction feeds the next step, creating a trajectory, not a one-shot score.
 
-Behind that interaction is a compact learned next-state model. It takes the serving configuration, workload, and current system state, then predicts the next queue depth, active requests, V RAM, utilization, throughput, and tail latency. Each prediction becomes the input to the next step.
+Then traffic jumps six times. I commit to a forecast, switch to four-bit weights, enable continuous batching, reuse the shared prefix, and turn on speculative decoding while protecting five constraints.
 
-Once the mental model is built, P ninety-nine turns up the pressure. In the production incident, traffic has jumped six times and five constraints must be protected at once.
+The learned model predicts recovery, but it does not grade itself. An independent deterministic trace checks the same configuration, clears every objective, and scores one hundred out of one hundred.
 
-I predict the queue will clear, switch to four-bit weights, batch requests, reuse the shared prefix, and enable speculative decoding.
+The boundary is explicit. This is a real learned surrogate trained on bootstrap traces, not a production hardware oracle. An optional Modal and llama.cpp runner can collect measured GPU traces for future training.
 
-The learned model forecasts a healthy system. But it does not grade itself. A separate deterministic reference trace checks the same configuration. The measured result clears every service objective and contains the incident with a score of one hundred out of one hundred.
+I built P99 for OpenAI Build Week with Codex and GPT-5.6. Codex helped pressure-test the idea, drive the pivot to inference engineering, implement the learned rollout and interface, test the behavior, document the limits, and deploy the site. I kept building from my desktop and phone over the weekend. GPT-5.6 powered the core product and engineering work through Codex, not just the copy.
 
-The scientific boundary is visible in the product. The current network is a real learned surrogate trained on bootstrap traces, not a production hardware oracle. An optional Modal and llama C plus plus path can collect real G P U traces for future training.
-
-I built P ninety-nine during Open A I Build Week with Codex and G P T five point six. I used Codex on my desktop and from my phone to pressure-test the original idea, pivot to inference education, design the system, implement the model and interface, write tests, document the limitations, and deploy the public site. G P T five point six powered the core product and engineering work through Codex, not just the copy.
-
-P ninety-nine lets you learn inference by running it.
+P99 turns inference engineering from something you read into something you can run. Try it live.

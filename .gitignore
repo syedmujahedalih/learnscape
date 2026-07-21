@@ -48,3 +48,5 @@ __pycache__/
 /video/out/
 /video/.remotion/
 /video/public/audio/*.aiff
+/video/public/audio/p99-voiceover.mp3
+/video/public/audio/p99-voiceover-alignment.json
