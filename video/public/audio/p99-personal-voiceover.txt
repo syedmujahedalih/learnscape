@@ -8,7 +8,7 @@ In the playground, change precision, batching, cache, concurrency, and decoding.
 
 Real measurements require a connected runtime. Attach local or cloud compute and P ninety-nine records latency, throughput, queue depth, GPU utilization, power, and memory. Model quality is evaluated separately.
 
-I built P ninety-nine with Codex and GPT-5.6 during OpenAI Build Week. Codex helped me pivot, implement, test, document, and deploy from desktop and phone.
+I built P ninety-nine with Codex and GPT-5.6 during OpenAI Build Week. GPT-5.6 helped me pressure-test the product direction and simplify the learning flow. Codex helped me implement, test, document, and deploy from desktop and phone.
 
 Today, the curriculum, prediction loop, experiment builder, and measured runner path work. Next is bring your own compute, then learned dynamics trained on diverse traces.
 

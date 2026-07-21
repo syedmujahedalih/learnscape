@@ -33,9 +33,9 @@ const PersonalMotivation = ({duration}: {duration: number}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const enter = spring({frame, fps, config: {damping: 15, stiffness: 92}});
-  const resources = spring({frame: frame - 310, fps, config: {damping: 14, stiffness: 100}});
-  const wanted = spring({frame: frame - 385, fps, config: {damping: 14, stiffness: 100}});
-  const built = spring({frame: frame - 545, fps, config: {damping: 14, stiffness: 100}});
+  const resources = spring({frame: frame - 280, fps, config: {damping: 14, stiffness: 100}});
+  const wanted = spring({frame: frame - 355, fps, config: {damping: 14, stiffness: 100}});
+  const built = spring({frame: frame - 510, fps, config: {damping: 14, stiffness: 100}});
   return <AbsoluteFill style={{background: bg, color: text, opacity: fade(frame,duration), overflow: "hidden"}}>
     <Grid/>
     <div style={{position: "absolute", left: 92, right: 92, top: 58, display: "flex", justifyContent: "space-between", alignItems: "center"}}><Brand/><span style={{color: acid, font: "900 12px ui-monospace,monospace", letterSpacing: 2.3}}>WHY I BUILT THIS</span></div>
@@ -56,19 +56,19 @@ export const P99PersonalDemo = () => {
     <Audio src={staticFile("audio/p99-personal-voiceover.mp3")} playbackRate={1.04} volume={1}/>
     <Audio src={staticFile("audio/p99-ambient.m4a")} loop volume={0.12}/>
     <Progress progress={frame / 2789}/>
-    <Sequence from={0} durationInFrames={323}><QuoteScene duration={323}/></Sequence>
-    <Sequence from={323} durationInFrames={556}><PersonalMotivation duration={556}/></Sequence>
-    <Sequence from={879} durationInFrames={85}><ShotScene shot={shots.landing} duration={85} step="SO I BUILT P99" headline="Concepts become decisions." detail="An inference engineering playground built for active learning."/></Sequence>
-    <Sequence from={964} durationInFrames={174}><ShotScene shot={shots.primer} duration={174} step="01 · REQUEST LIFECYCLE" headline="Follow one request." detail="Queue → prefill → decode → stream" cursor={{x: 1348, y: 510, clickAt: 68}}/></Sequence>
-    <Sequence from={1138} durationInFrames={48}><ShotScene shot={shots.hypothesis} duration={48} step="02 · PREDICT" headline="Commit before the reveal." detail="Choose the signal that should change first." cursor={{x: 638, y: 676, clickAt: 18}}/></Sequence>
-    <Sequence from={1186} durationInFrames={32}><ShotScene shot={shots.committed} duration={32} step="HYPOTHESIS LOCKED" headline="Time to first token." detail="Now there is something to test." cursor={{x: 637, y: 676, clickAt: 8}}/></Sequence>
-    <Sequence from={1218} durationInFrames={34}><ShotScene shot={shots.feedback} duration={34} step="03 · CAUSAL FEEDBACK" headline="Explain why." detail="Prefix caching avoids repeated prefill work."/></Sequence>
-    <Sequence from={1252} durationInFrames={182}><ShotScene shot={shots.playground} duration={182} step="04 · EXPERIMENT" headline="Change one variable." detail="Precision, batching, cache, concurrency, and decoding." cursor={{x: 202, y: 375, clickAt: 76}}/></Sequence>
-    <Sequence from={1434} durationInFrames={157}><ShotScene shot={shots.experiment} duration={157} step="REPRODUCIBLE BY DESIGN" headline="Turn choices into a spec." detail="Hold the model, prompts, workload, and hardware constant." cursor={{x: 198, y: 636, clickAt: 54}}/></Sequence>
-    <Sequence from={1591} durationInFrames={94}><ShotScene shot={shots.incident} duration={94} step="05 · MEASURE" headline="Connect compute to measure." detail="Run the experiment on local or cloud hardware." accent={cyan} cursor={{x: 1700, y: 183, clickAt: 42}}/></Sequence>
-    <Sequence from={1685} durationInFrames={341}><MeasuredSignals duration={341}/></Sequence>
-    <Sequence from={2026} durationInFrames={340}><CodexScene duration={340}/></Sequence>
-    <Sequence from={2366} durationInFrames={333}><TodayNext duration={333}/></Sequence>
-    <Sequence from={2699} durationInFrames={91}><Close duration={91}/></Sequence>
+    <Sequence from={0} durationInFrames={314}><QuoteScene duration={314}/></Sequence>
+    <Sequence from={314} durationInFrames={523}><PersonalMotivation duration={523}/></Sequence>
+    <Sequence from={837} durationInFrames={60}><ShotScene shot={shots.landing} duration={60} step="SO I BUILT P99" headline="Concepts become decisions." detail="An inference engineering playground built for active learning."/></Sequence>
+    <Sequence from={897} durationInFrames={146}><ShotScene shot={shots.primer} duration={146} step="01 · REQUEST LIFECYCLE" headline="Follow one request." detail="Queue → prefill → decode → stream" cursor={{x: 1348, y: 510, clickAt: 62}}/></Sequence>
+    <Sequence from={1043} durationInFrames={47}><ShotScene shot={shots.hypothesis} duration={47} step="02 · PREDICT" headline="Commit before the reveal." detail="Choose the signal that should change first." cursor={{x: 638, y: 676, clickAt: 18}}/></Sequence>
+    <Sequence from={1090} durationInFrames={28}><ShotScene shot={shots.committed} duration={28} step="HYPOTHESIS LOCKED" headline="Time to first token." detail="Now there is something to test." cursor={{x: 637, y: 676, clickAt: 7}}/></Sequence>
+    <Sequence from={1118} durationInFrames={32}><ShotScene shot={shots.feedback} duration={32} step="03 · CAUSAL FEEDBACK" headline="Explain why." detail="Prefix caching avoids repeated prefill work."/></Sequence>
+    <Sequence from={1150} durationInFrames={161}><ShotScene shot={shots.playground} duration={161} step="04 · EXPERIMENT" headline="Change one variable." detail="Precision, batching, cache, concurrency, and decoding." cursor={{x: 202, y: 375, clickAt: 68}}/></Sequence>
+    <Sequence from={1311} durationInFrames={147}><ShotScene shot={shots.experiment} duration={147} step="REPRODUCIBLE BY DESIGN" headline="Turn choices into a spec." detail="Hold the model, prompts, workload, and hardware constant." cursor={{x: 198, y: 636, clickAt: 50}}/></Sequence>
+    <Sequence from={1458} durationInFrames={89}><ShotScene shot={shots.incident} duration={89} step="05 · MEASURE" headline="Connect compute to measure." detail="Run the experiment on local or cloud hardware." accent={cyan} cursor={{x: 1700, y: 183, clickAt: 40}}/></Sequence>
+    <Sequence from={1547} durationInFrames={335}><MeasuredSignals duration={335}/></Sequence>
+    <Sequence from={1882} durationInFrames={480}><CodexScene duration={480}/></Sequence>
+    <Sequence from={2362} durationInFrames={325}><TodayNext duration={325}/></Sequence>
+    <Sequence from={2687} durationInFrames={103}><Close duration={103}/></Sequence>
   </AbsoluteFill>;
 };

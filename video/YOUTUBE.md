@@ -1,5 +1,9 @@
 # YouTube upload copy
 
+Uploaded video: https://youtu.be/JAmnPpx39Kk
+
+Visibility: Unlisted
+
 ## Title
 
 P99 | Learn the LLM Inference Stack | OpenAI Build Week
@@ -18,6 +22,11 @@ Future work includes bring-your-own local or cloud compute and a learned world m
 
 Built for the OpenAI Build Week Education track with Codex and GPT-5.6.
 
+Voiceover generated with ElevenLabs using the Tyler voice.
+
+Opening quote: Philip Kiely, author of Inference Engineering
+https://philipkiely.com/books
+
 Try P99: https://learnscape-education.syedmujahedalih.chatgpt.site
 
 Source: https://github.com/syedmujahedalih/learnscape
@@ -26,6 +35,6 @@ Source: https://github.com/syedmujahedalih/learnscape
 
 ## Upload
 
-Upload `video/out/p99-personal-demo.mp4` as Public or Unlisted. It is the recommended 93-second cut covering the motivation, product, connected compute measurements, Codex and GPT-5.6 usage, and future work. Verify the finished URL in a private window before adding it to Devpost.
+`video/out/p99-personal-demo.mp4` is the uploaded 93-second cut covering the motivation, product, connected compute measurements, Codex and GPT-5.6 usage, and future work. The finished URL was verified in an unsigned incognito window.
 
 Use `video/out/p99-judge-demo.mp4` as the product-first alternate or `video/out/p99-fast-demo.mp4` as the shorter social trailer.
