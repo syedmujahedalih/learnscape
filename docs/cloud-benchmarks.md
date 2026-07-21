@@ -1,6 +1,6 @@
 # Enable real ephemeral GPU benchmarks
 
-The core demo needs no cloud account. This optional path launches a single short-lived GPU and returns measured llama.cpp telemetry.
+The curriculum and experiment builder need no cloud account. This optional path launches a single short-lived GPU and returns measured llama.cpp telemetry.
 
 ## 1. Authenticate Modal
 
@@ -32,7 +32,7 @@ P99_BENCHMARK_URL="https://YOUR-WORKSPACE--p99-benchmark-worker-api.modal.run"
 P99_BENCHMARK_KEY="YOUR_LONG_RANDOM_VALUE"
 ```
 
-Restart P99. `CLOUD GPU` should now say `ready · metered`.
+Restart P99. The incident lab should report that the connected runner is ready.
 
 ## Spend and safety bounds
 
@@ -45,12 +45,8 @@ Restart P99. `CLOUD GPU` should now say `ready · metered`.
 
 The first run can be slow because the container image and GGUF file are cold. Run one rehearsal before recording.
 
-## Feed measured traces back into the model
+## Preserve measured traces for future research
 
-Completed traces are stored in the Modal Volume named `p99-benchmark-traces`. Download the `.json` files into `data/traces/`, then run:
+Completed traces are stored in the Modal Volume named `p99-benchmark-traces`. They can seed a future measured corpus, but the current application does not train or ship a predictive model.
 
-```bash
-npm run dynamics:train
-```
-
-Once at least 200 measured transitions exist, the generated model metadata changes from `simulator_synthetic` to `cloud_and_local_traces`.
+Before training any future system-dynamics model, collect repeated runs across hardware, models, workloads, and random seeds; define held-out hardware and workload splits; and report error over rollout horizons.

@@ -1,32 +1,28 @@
 # P99
 
-**Learn inference engineering by running it.** P99 is an interactive playground for understanding LLM serving systems. Learners build the fundamentals through focused experiments, explore the serving stack freely, and graduate to production incidents powered by a learned next-state model.
+**Learn the inference stack. Measure what happens.** P99 is a hands-on playground for people learning LLM inference engineering.
 
-[Launch the P99 playground →](https://learnscape-education.syedmujahedalih.chatgpt.site)
+[Launch P99 →](https://learnscape-education.syedmujahedalih.chatgpt.site)
 
 The hosted demo is public and works without an account or API key.
 
-P99 is an OpenAI Build Week Education-track project built for students and engineers learning to operate production AI infrastructure. Instead of separating quantization, batching, caching, and decoding into passive lessons, it makes their interaction the curriculum.
+P99 is an OpenAI Build Week Education-track project. It turns tail latency, batching, KV cache, quantization, concurrency, and speculative decoding into a progression from concept to controlled experiment to measured runtime trace.
 
-## Learning experience
+## What works today
 
-- **Foundations:** six beginner-friendly, one-variable labs covering tail latency, continuous batching, KV cache, quantization, concurrency, and speculative decoding.
-- **Free playground:** every serving control updates a labeled 30-second learned rollout, queue trajectory, SLO readout, and plain-language causal explanation.
-- **Production incidents:** learners predict a failure, combine multiple interventions, and validate the result against an independent trace.
+- **Foundations:** six short lessons explain each serving concept, the variable to change, and the signals to observe.
+- **Experiment builder:** learners configure a serving test and export a reproducible JSON specification.
+- **Measured incident lab:** when an operator connects the optional runner, learners commit to an outcome and compare it with a real llama.cpp GPU trace.
+- **Honest empty state:** without a connected runtime, P99 shows no simulated benchmark, synthetic score, or estimated result.
+- **Optional cloud runner:** the included Modal worker can provision a T4, L4, or A10G, run an allow-listed Qwen2.5-7B GGUF workload, and return llama.cpp plus `nvidia-smi` telemetry.
 
-The progression is deliberately simple: **learn → experiment → diagnose → operate**.
+Quality is deliberately not inferred from a performance trace. It requires a separate evaluation.
 
-## What is real today
+## Future direction
 
-- A 19→24→6 multilayer perceptron recursively predicts queue depth, active requests, VRAM, utilization, throughput, and p95 state.
-- The checked-in weights are reproducibly trained from 10,800 synthetic simulator transitions so the demo works without a GPU.
-- A deterministic reference engine independently grades configurations offline.
-- An optional Modal runner provisions a T4, L4, or A10G; launches llama.cpp with Qwen2.5-7B; generates the fixed workload; and records llama.cpp plus `nvidia-smi` telemetry.
-- The UI labels the provenance of every outcome. Simulator-trained forecasts are never presented as measured production data.
+The next product step is **bring your own environment**: connect local llama.cpp, a workstation GPU, a lab cluster, or cloud compute through an authenticated trace adapter.
 
-## Flagship incident
-
-The launch-day latency spiral puts an 8B-class model under a sudden traffic spike. The learner must satisfy p95 latency, throughput, VRAM, quality, and cost constraints by changing precision, continuous batching, KV-cache allocation, concurrency, prefix caching, and speculative decoding.
+Once P99 has a broad corpus of measured transitions across hardware, models, workloads, and interventions, it can support a real learned next-state model. That model is future work. There is no neural predictor or hand-coded serving simulator in the current product.
 
 ## Run locally
 
@@ -35,28 +31,14 @@ npm install
 npm run dev
 ```
 
-No API key, model download, or GPU is required for the learned forecast and reference-trace path. To enable real ephemeral GPU runs, follow [docs/cloud-benchmarks.md](docs/cloud-benchmarks.md).
+The curriculum and experiment builder require no API key, model download, or GPU. To enable the included cloud runner, follow [docs/cloud-benchmarks.md](docs/cloud-benchmarks.md).
 
 ## Privacy-light telemetry
 
-The public demo records only allowlisted interaction events, a one-way-hashed tab session identifier, coarse device class, and coarse referral source. It does not store names, email addresses, raw IPs, uploaded content, or cross-site identifiers. Do Not Track is respected, raw events expire after 30 days, and `/api/telemetry` exposes aggregate counts only to the owner via a protected admin key.
-
-## Retrain the learned dynamics surrogate
-
-```bash
-npm run dynamics:train
-```
-
-The trainer consumes JSON or JSONL traces from `data/traces/` when at least 200 transitions are available; otherwise it regenerates the labeled synthetic simulator corpus. Generated weights live in `lib/inference/learned-dynamics-weights.ts`.
+The public demo records only allow-listed interaction events, a one-way-hashed tab session identifier, coarse device class, and coarse referral source. It does not store names, email addresses, raw IPs, prompts, model outputs, or cross-site identifiers. Do Not Track is respected, raw events expire after 30 days, and aggregate metrics require an owner-held admin key.
 
 ## How Codex and GPT-5.6 were used
 
-Codex was the primary engineering collaborator for the product pivot, inference-system architecture, learned state rollout, Modal/llama.cpp trace runner, UI implementation, tests, documentation, and deployment. GPT-5.6 was used through Codex for the core implementation and review decisions.
-
-The judged experience remains deterministic and does not require API credits. This keeps the demo reliable while preserving an authenticated cloud path for measured GPU traces.
-
-## Scientific boundary
-
-The checked-in learned dynamics surrogate is a real recursive next-state network, currently trained on 10,800 synthetic transitions generated by the reference simulator. It is not a production hardware predictor. The optional Modal runner is the data-collection path for replacing that corpus with repeated measurements.
+Codex was the primary engineering collaborator for the product pivot, interface implementation, cloud trace path, tests, documentation, and deployment. GPT-5.6 was used through Codex for core implementation and review decisions, not only copywriting.
 
 Read [the architecture](docs/architecture.md), [demo script](docs/demo-script.md), and [limitations](docs/limitations.md).

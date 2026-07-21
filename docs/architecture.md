@@ -1,44 +1,40 @@
 # P99 architecture
 
-P99 has three deliberately separate layers.
+P99 currently has three layers.
 
-## 1. Learned dynamics surrogate
+## 1. Curriculum and experiment specification
 
-`lib/inference/learned-dynamics.ts` recursively applies a generated 19-input, 24-hidden-unit, 6-output MLP. Its state is:
+`app/page.tsx` contains the guided foundations, experiment builder, and incident workflow. `lib/inference/experiment.ts` defines the allow-listed serving controls and fixed workload metadata.
 
-`queue depth + active requests + VRAM + GPU utilization + throughput + p95 latency`
+This layer teaches what to change and what to observe. It does not calculate performance.
 
-Each step is conditioned on the previous state, serving configuration, workload, and rollout progress. The prediction becomes the next input, creating a recursive learned trajectory rather than a single outcome regression. An explicit SLO head derives end-to-end tail latency and the mission score from the predicted system state.
+## 2. Server-only benchmark proxy
 
-The generated weights and training metadata are in `lib/inference/learned-dynamics-weights.ts`. `scripts/train_learned_dynamics.mjs` can fit the model from normalized trace transitions.
+`app/api/benchmark/route.ts` validates every requested configuration and proxies jobs to an operator-configured runner. The runner URL and authentication key remain server-side. If no runner is configured, the UI shows an explicit unavailable state and returns no substitute result.
 
-## 2. Independent validation
-
-The default reference path calls the deterministic educational engine in `lib/inference/engine.ts`. It does not share learned weights with the surrogate. This preserves a fast, repeatable demo and makes forecast error visible.
-
-When configured, `app/api/benchmark/route.ts` instead creates and polls a real GPU job. The API key remains server-side.
-
-## 3. Ephemeral GPU trace runner
+## 3. Optional ephemeral GPU runner
 
 `cloud/modal_benchmark.py` exposes an authenticated, allow-listed job API. Each job:
 
-1. provisions one T4, L4, or A10G with a ten-minute hard timeout;
+1. provisions one T4, L4, or A10G with a hard timeout;
 2. starts llama.cpp with an official Qwen2.5-7B GGUF quantization;
-3. replays the fixed 2.4 request/second workload;
-4. samples llama.cpp Prometheus metrics and `nvidia-smi` telemetry;
-5. saves a versionable trace and returns its observed summary;
+3. runs the fixed workload;
+4. samples llama.cpp metrics and `nvidia-smi` telemetry;
+5. returns a measured trace;
 6. terminates with the function container.
 
-Arbitrary repositories, shell arguments, durations, and GPU types are not accepted from the browser. This bounds both attack surface and spend.
+Arbitrary repositories, shell arguments, durations, and GPU types are not accepted from the browser.
 
 ```mermaid
 flowchart LR
-  UI["P99 incident UI"] --> WM["Learned next-state rollout"]
-  UI --> API["Server-only benchmark proxy"]
-  API --> MODAL["Ephemeral Modal GPU"]
-  MODAL --> LLAMA["llama.cpp + Qwen 7B"]
-  LLAMA --> TRACE["Measured state trace"]
+  UI["P99 curriculum and experiment UI"] --> SPEC["Validated experiment spec"]
+  SPEC --> API["Server-only benchmark proxy"]
+  API --> RUNNER["Optional connected runner"]
+  RUNNER --> LLAMA["llama.cpp on real hardware"]
+  LLAMA --> TRACE["Measured trace"]
   TRACE --> UI
-  TRACE --> TRAIN["Offline trainer"]
-  TRAIN --> WM
 ```
+
+## Future architecture
+
+Bring-your-own-environment adapters would normalize traces from local llama.cpp, workstation GPUs, clusters, and cloud providers. A future learned system-dynamics model could then train on measured state transitions and predict the next state under an intervention. It should be introduced only after there is enough diverse measured data to evaluate generalization honestly.

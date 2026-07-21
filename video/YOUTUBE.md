@@ -2,15 +2,17 @@
 
 ## Title
 
-P99 | Learn LLM Inference by Running It | OpenAI Build Week
+P99 | Learn the LLM Inference Stack | OpenAI Build Week
 
 ## Description
 
-P99 is an interactive playground for learning LLM inference engineering.
+P99 is a hands-on playground for learning LLM inference engineering.
 
-Start with focused foundation labs, experiment freely with the serving stack, then graduate to production incidents. Change precision, batching, KV cache, concurrency, prefix caching, and speculative decoding while watching queue depth, latency, throughput, and GPU memory respond.
+Start with focused foundations, design a reproducible serving experiment, and run it only when a real environment is connected. P99 does not substitute synthetic benchmark numbers when no runtime is available.
 
-A compact learned next-state model rolls the system forward. An independent reference trace validates the forecast, and the product labels the provenance of every result.
+The current product includes six inference foundations, an experiment builder, an incident workflow, and an optional Modal plus llama.cpp path for measured GPU traces.
+
+Future work includes bring-your-own local or cloud compute and a learned world model trained and evaluated on diverse measured traces.
 
 Built for the OpenAI Build Week Education track with Codex and GPT-5.6.
 
@@ -18,16 +20,8 @@ Try P99: https://learnscape-education.syedmujahedalih.chatgpt.site
 
 Source: https://github.com/syedmujahedalih/learnscape
 
-The checked-in learned dynamics surrogate is trained on labeled synthetic simulator traces and is explicitly identified as such. The optional Modal and llama.cpp path is designed to collect measured GPU traces for retraining.
-
 #OpenAI #BuildWeek #Codex #InferenceEngineering #LLM #AIEducation
 
-## Thumbnail
+## Upload
 
-Use `video/out/p99-youtube-thumbnail.jpg`.
-
-## Upload file
-
-Use `video/out/p99-youtube-demo.mp4`.
-
-Set visibility to **Public** or **Unlisted**, then verify the finished URL in a private/incognito window before adding it to Devpost.
+Upload `video/out/p99-youtube-demo.mp4` as Public or Unlisted. Verify the finished URL in a private window before adding it to Devpost.

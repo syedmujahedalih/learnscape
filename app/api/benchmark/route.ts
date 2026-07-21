@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const baseUrl = endpoint();
   if (!baseUrl || !process.env.P99_BENCHMARK_KEY) {
-    return NextResponse.json({ error: "Cloud GPU runner is not configured. Use the reference trace or follow docs/cloud-benchmarks.md." }, { status: 503 });
+    return NextResponse.json({ error: "No benchmark runner is connected. Follow docs/cloud-benchmarks.md to attach one." }, { status: 503 });
   }
   const parsed = jobSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid benchmark configuration.", issues: parsed.error.issues }, { status: 400 });

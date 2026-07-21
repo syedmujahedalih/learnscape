@@ -10,8 +10,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
   const host = requestHeaders.get("host") ?? "p99.local";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? "https";
-  const title = "P99 — Learn inference engineering by running it.";
-  const description = "An interactive playground for learning LLM inference: build the fundamentals, experiment with the serving stack, and graduate to production incidents.";
+  const title = "P99 — Learn the inference stack. Measure what happens.";
+  const description = "A hands-on playground for learning LLM inference engineering through concepts, reproducible experiments, and measured runtime traces.";
   return { title, description, icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" }, openGraph: { title, description, images: [`${protocol}://${host}/og.png`] }, twitter: { card: "summary_large_image", title, description, images: [`${protocol}://${host}/og.png`] } };
 }
 

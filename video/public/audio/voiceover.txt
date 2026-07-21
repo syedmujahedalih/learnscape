@@ -1,19 +1,15 @@
-Most people discover inference engineering when latency is already failing. I built P99 so you can learn how these systems behave before production makes the lesson expensive.
+Inference engineering is usually taught through diagrams and disconnected benchmarks. I wanted P99 to make the learning loop concrete.
 
-P99 is an interactive playground for LLM serving. Six foundation labs cover tail latency, batching, the KV cache, quantization, concurrency, and speculative decoding. Predict first, change one variable, watch the system respond, then explain why.
+Start with the foundations. Each short lesson explains one serving concept, one controlled change, and the signals that would prove its effect.
 
-In the cache lab, prefix caching cuts repeated prefill work. Time to first token falls while decode throughput barely moves. P99 makes that distinction visible.
+Then build an experiment. Choose precision, batch size, KV cache, concurrency, prefix caching, and speculative decoding. P99 turns those choices into a reproducible specification.
 
-Then explore freely. Tune precision, batch size, cache capacity, or concurrency. P99 rolls forward for thirty seconds as queue depth, tail latency, throughput, and GPU memory move together, with a plain-English causal explanation.
+Here is the important product decision. P99 does not invent performance numbers. If no runtime is connected, the result stays empty.
 
-Under the interface is a compact learned next-state model. It takes the configuration, workload, and current state, then predicts the next queue, active requests, VRAM, utilization, throughput, and tail latency. Each prediction feeds the next step, creating a trajectory, not a one-shot score.
+With the optional cloud runner attached, the learner commits to an outcome and runs the workload on a real GPU. The trace can report latency, throughput, queue depth, utilization, power, and memory. Model quality remains a separate evaluation.
 
-Then traffic jumps six times. I commit to a forecast, switch to four-bit weights, enable continuous batching, reuse the shared prefix, and turn on speculative decoding while protecting five constraints.
+The next step is bring your own environment. That could be local llama.cpp on a Mac or workstation, a university cluster, or cloud GPUs. A real learned world model comes later, trained and tested on diverse measured traces instead of bootstrap simulation.
 
-The learned model predicts recovery, but it does not grade itself. An independent deterministic trace checks the same configuration, clears every objective, and scores one hundred out of one hundred.
+I built P99 for OpenAI Build Week with Codex and GPT-5.6. Codex helped me pressure-test the original idea, pivot to inference education, implement the product, test it, document the limits, and deploy from both my desktop and phone.
 
-The boundary is explicit. This is a real learned surrogate trained on bootstrap traces, not a production hardware oracle. An optional Modal and llama.cpp runner can collect measured GPU traces for future training.
-
-I built P99 for OpenAI Build Week with Codex and GPT-5.6. Codex helped pressure-test the idea, drive the pivot to inference engineering, implement the learned rollout and interface, test the behavior, document the limits, and deploy the site. I kept building from my desktop and phone over the weekend. GPT-5.6 powered the core product and engineering work through Codex, not just the copy.
-
-P99 turns inference engineering from something you read into something you can run. Try it live.
+P99 teaches the inference stack, then asks you to measure what actually happens.

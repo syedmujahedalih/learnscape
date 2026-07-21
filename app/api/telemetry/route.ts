@@ -7,15 +7,11 @@ const eventNames = [
   "site_open",
   "foundations_open",
   "lesson_selected",
-  "experiment_completed",
+  "experiment_planned",
   "playground_open",
   "playground_control_changed",
-  "playground_preset_loaded",
   "incident_started",
-  "forecast_generated",
-  "reference_trace_completed",
   "gpu_trace_completed",
-  "incident_completed",
 ] as const;
 
 const eventSchema = z.object({
