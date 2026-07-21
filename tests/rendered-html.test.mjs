@@ -10,6 +10,12 @@ test("the application exposes an inference-engineering learning playground", asy
   assert.match(html, /Experiment builder/i);
   assert.match(html, /Incident lab/i);
   assert.match(html, /Foundations/i);
+  assert.match(html, /Follow one request/i);
+  assert.match(html, /60-SECOND PRIMER/i);
+  assert.match(html, /COMMIT TO A HYPOTHESIS/i);
+  assert.match(html, /role="radiogroup"/i);
+  assert.match(html, /role="switch"/i);
+  assert.match(html, /This lab needs connected compute/i);
   assert.match(html, /Tail latency/i);
   assert.match(html, /KV cache/i);
   assert.match(html, /Quantization/);
