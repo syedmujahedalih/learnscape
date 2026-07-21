@@ -10,7 +10,7 @@ P99 is a hands-on playground for learning LLM inference engineering.
 
 Philip Kiely writes that inference engineering is still in its infancy. That idea captures why I built P99. I wanted a place where learners could predict, tune, experiment, and understand what changed, instead of only reading about the serving stack.
 
-Start with focused foundations, design a reproducible serving experiment, and run it only when a real environment is connected. P99 does not substitute synthetic benchmark numbers when no runtime is available.
+Start with focused foundations, design a reproducible serving experiment, then connect local or cloud compute to collect real measurements.
 
 The current product includes six inference foundations, an experiment builder, an incident workflow, and an optional Modal plus llama.cpp path for measured GPU traces.
 
@@ -26,6 +26,6 @@ Source: https://github.com/syedmujahedalih/learnscape
 
 ## Upload
 
-Upload `video/out/p99-personal-demo.mp4` as Public or Unlisted. It is the recommended 90-second cut covering the motivation, product, technical boundary, Codex and GPT-5.6 usage, and future work. Verify the finished URL in a private window before adding it to Devpost.
+Upload `video/out/p99-personal-demo.mp4` as Public or Unlisted. It is the recommended 93-second cut covering the motivation, product, connected compute measurements, Codex and GPT-5.6 usage, and future work. Verify the finished URL in a private window before adding it to Devpost.
 
 Use `video/out/p99-judge-demo.mp4` as the product-first alternate or `video/out/p99-fast-demo.mp4` as the shorter social trailer.

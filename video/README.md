@@ -34,7 +34,7 @@ The upload-ready result is `video/out/p99-judge-demo.mp4`. This remains availabl
 
 ## Personal Devpost cut
 
-The recommended 90-second submission cut opens with Philip Kiely's observation that inference engineering is still in its infancy, then gives the founder motivation behind P99 before moving through the product, measured-runner boundary, Codex and GPT-5.6 usage, and future work.
+The recommended 93-second submission cut opens with Philip Kiely's observation that inference engineering is still in its infancy, then gives the founder motivation behind P99 before moving through the product, connected compute measurements, Codex and GPT-5.6 usage, and future work.
 
 ```bash
 cd video
