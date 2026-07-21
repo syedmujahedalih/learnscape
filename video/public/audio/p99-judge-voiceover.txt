@@ -1,0 +1,13 @@
+Most inference courses stop at diagrams. I built P99 to turn concepts into decisions.
+
+A learner starts by following one request from queue to prefill, decode, and stream. Then they commit to a hypothesis before the explanation. Here, prefix caching should improve time to first token first.
+
+In the playground, they change precision, batching, cache, concurrency, and decoding. P99 turns those choices into a reproducible experiment while holding the model, prompts, workload, and hardware constant.
+
+The key boundary is honesty. No connected runtime means no benchmark. Attach local or cloud compute, and the same workflow can capture latency, throughput, queues, utilization, power, and memory from a real trace. Quality stays a separate evaluation.
+
+I built P99 with Codex and GPT-5.6 during OpenAI Build Week. Codex helped me pressure-test the idea, pivot to inference education, implement the product, test the learning loop, document the limits, and deploy from desktop and phone.
+
+Today, P99 ships the curriculum, prediction loop, experiment builder, and optional measured runner path. Next comes bring your own compute and, later, learned dynamics trained on diverse measured traces.
+
+Learn the stack. Measure what actually happens.

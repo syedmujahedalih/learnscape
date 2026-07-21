@@ -14,12 +14,12 @@ import {
 const bg = "#04070b";
 const text = "#edf3f5";
 const muted = "#82909a";
-const acid = "#b7ff5e";
-const cyan = "#58d9ff";
-const red = "#ff596e";
-const line = "#26333e";
+export const acid = "#b7ff5e";
+export const cyan = "#58d9ff";
+export const red = "#ff596e";
+export const line = "#26333e";
 
-const shots = {
+export const shots = {
   landing: "p99-fast/01-landing.jpg",
   primer: "p99-fast/02-primer.jpg",
   hypothesis: "p99-fast/03-hypothesis.jpg",
@@ -37,19 +37,19 @@ const sceneFade = (frame: number, duration: number) => interpolate(
   {extrapolateLeft: "clamp", extrapolateRight: "clamp"},
 );
 
-const Grid = () => <AbsoluteFill style={{
+export const Grid = () => <AbsoluteFill style={{
   opacity: 0.38,
   backgroundImage: "linear-gradient(rgba(88,217,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(88,217,255,.055) 1px,transparent 1px)",
   backgroundSize: "44px 44px",
   maskImage: "radial-gradient(circle at 50% 45%,black,transparent 82%)",
 }}/>;
 
-const Brand = () => <div style={{display: "flex", alignItems: "center", gap: 13}}>
+export const Brand = () => <div style={{display: "flex", alignItems: "center", gap: 13}}>
   <div style={{width: 42, height: 42, border: `1px solid ${acid}`, borderRadius: 7, display: "grid", placeItems: "center", color: acid, font: "900 15px ui-monospace,monospace"}}>P/</div>
   <b style={{font: "900 25px Inter,Arial"}}>P99</b>
 </div>;
 
-const Progress = ({progress}: {progress: number}) => <div style={{position: "absolute", zIndex: 90, left: 0, right: 0, top: 0, height: 5, background: "#101820"}}>
+export const Progress = ({progress}: {progress: number}) => <div style={{position: "absolute", zIndex: 90, left: 0, right: 0, top: 0, height: 5, background: "#101820"}}>
   <div style={{height: "100%", width: `${progress * 100}%`, background: `linear-gradient(90deg,${cyan},${acid})`, boxShadow: `0 0 18px ${acid}88`}}/>
 </div>;
 
@@ -73,7 +73,7 @@ type ShotSceneProps = {
   cursor?: {x: number; y: number; clickAt?: number};
 };
 
-const ShotScene = ({shot, duration, step, headline, detail, accent = acid, cursor}: ShotSceneProps) => {
+export const ShotScene = ({shot, duration, step, headline, detail, accent = acid, cursor}: ShotSceneProps) => {
   const frame = useCurrentFrame();
   const zoom = interpolate(frame, [0, duration], [1.015, 1.055], {extrapolateRight: "clamp"});
   const caption = spring({frame: frame - 4, fps: 30, config: {damping: 16, stiffness: 115}});
@@ -94,7 +94,7 @@ const ShotScene = ({shot, duration, step, headline, detail, accent = acid, curso
   </AbsoluteFill>;
 };
 
-const Hook = ({duration}: {duration: number}) => {
+export const Hook = ({duration}: {duration: number}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const enter = spring({frame, fps, config: {damping: 13, stiffness: 105}});
@@ -102,14 +102,14 @@ const Hook = ({duration}: {duration: number}) => {
   return <AbsoluteFill style={{background: bg, color: text, opacity: sceneFade(frame, duration), overflow: "hidden"}}><Grid/><div style={{position: "absolute", left: 92, right: 92, top: 56, display: "flex", alignItems: "center", justifyContent: "space-between"}}><Brand/><span style={{color: cyan, font: "850 12px ui-monospace,monospace", letterSpacing: 2.5}}>OPENAI BUILD WEEK</span></div><div style={{position: "absolute", left: 115, top: 300, opacity: enter, transform: `translateY(${(1-enter)*42}px)`}}><span style={{color: red, font: "900 14px ui-monospace,monospace", letterSpacing: 4}}>INFERENCE EDUCATION NEEDS A BETTER LOOP</span><h1 style={{margin: "24px 0 0", font: "950 104px/.88 Inter,Arial", letterSpacing: -7}}>STOP WATCHING.<br/><span style={{color: acid, opacity: split}}>START TUNING.</span></h1></div></AbsoluteFill>;
 };
 
-const CodexScene = ({duration}: {duration: number}) => {
+export const CodexScene = ({duration}: {duration: number}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const tasks = ["PIVOT THE IDEA", "SHIP THE UI", "TEST THE LEARNING LOOP", "DEPLOY FROM DESKTOP + PHONE"];
   return <AbsoluteFill style={{background: `radial-gradient(circle at 76% 42%,#173a35,transparent 32%),${bg}`, color: text, opacity: sceneFade(frame, duration)}}><Grid/><div style={{position: "absolute", left: 95, right: 95, top: 68, display: "flex", justifyContent: "space-between"}}><Brand/><span style={{color: acid, font: "900 12px ui-monospace,monospace", letterSpacing: 2}}>CODEX + GPT-5.6</span></div><div style={{position: "absolute", left: 120, right: 120, top: 230, display: "grid", gridTemplateColumns: "1fr .95fr", gap: 100}}><section><span style={{color: cyan, font: "900 13px ui-monospace,monospace", letterSpacing: 3}}>BUILT THROUGH CONVERSATION</span><h2 style={{margin: "24px 0 0", font: "950 78px/.9 Inter,Arial", letterSpacing: -5}}>FROM DESK<br/>TO PHONE.<br/><i style={{color: acid, fontStyle: "normal"}}>KEEP SHIPPING.</i></h2></section><section style={{border: `1px solid ${line}`, borderRadius: 15, background: "#091018", padding: 26}}>{tasks.map((task,index) => {const item = spring({frame: frame-index*9, fps, config: {damping: 15, stiffness: 120}}); return <div key={task} style={{height: 118, borderTop: index ? `1px solid ${line}` : undefined, display: "grid", gridTemplateColumns: "52px 1fr auto", alignItems: "center", opacity: item, transform: `translateX(${(1-item)*34}px)`}}><span style={{color: muted, font: "800 12px ui-monospace,monospace"}}>{String(index+1).padStart(2,"0")}</span><b style={{font: "900 16px ui-monospace,monospace", letterSpacing: 1.2}}>{task}</b><strong style={{color: acid, font: "900 22px ui-monospace,monospace"}}>✓</strong></div>})}</section></div></AbsoluteFill>;
 };
 
-const Close = ({duration}: {duration: number}) => {
+export const Close = ({duration}: {duration: number}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const enter = spring({frame, fps, config: {damping: 14, stiffness: 90}});

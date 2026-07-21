@@ -20,3 +20,14 @@ npm run render:fast
 ```
 
 The upload-ready result is `video/out/p99-fast-demo.mp4`. Its narration source is `public/audio/p99-fast-voiceover.txt`.
+
+## Judge cut
+
+The 90-second judge cut keeps the trailer pacing while adding a coherent product walkthrough, measured-runner signals, Codex and GPT-5.6 usage, and a clear separation between what works today and future work.
+
+```bash
+cd video
+npm run render:judge
+```
+
+Use `video/out/p99-judge-demo.mp4` for the Devpost submission. The 45-second fast cut remains useful for social posts.

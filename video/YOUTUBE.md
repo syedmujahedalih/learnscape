@@ -24,4 +24,6 @@ Source: https://github.com/syedmujahedalih/learnscape
 
 ## Upload
 
-Upload `video/out/p99-fast-demo.mp4` as Public or Unlisted. It is the tighter 45-second product cut. Verify the finished URL in a private window before adding it to Devpost.
+Upload `video/out/p99-judge-demo.mp4` as Public or Unlisted. It is the 90-second judge cut covering the product, technical boundary, Codex and GPT-5.6 usage, and future work. Verify the finished URL in a private window before adding it to Devpost.
+
+Use `video/out/p99-fast-demo.mp4` as the shorter social trailer.
